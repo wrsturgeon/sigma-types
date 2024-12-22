@@ -15,7 +15,7 @@ categories = [ "data-structures", "development-tools", "mathematics", "no-std", 
 [dependencies]
 
 [dev-dependencies]
-quickcheck = { version = "*", default-features = false, features = [  ] }
+quickcheck = { version = "=1.0.3", default-features = false, features = [  ] }
 
 [lints.rust]
 abi-unsupported-vector-types = "deny"

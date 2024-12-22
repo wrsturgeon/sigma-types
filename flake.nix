@@ -81,6 +81,14 @@
             )
           );
 
+        cargo-lock = builtins.fromTOML (builtins.readFile ./Cargo.lock);
+        dependency-versions = builtins.listToAttrs (
+          builtins.map (dependency: {
+            inherit (dependency) name;
+            value = dependency.version;
+          }) cargo-lock.package
+        );
+
         cargo-toml = "Cargo.toml";
         registry-keywords = [
           "no_std"
@@ -142,7 +150,9 @@
             builtins.attrValues (
               builtins.mapAttrs (
                 pkg: features:
-                "${pkg} = { version = \"*\", default-features = false, features = [ ${
+                "${pkg} = { version = \"${
+                  if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
+                }\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
                 } ] }"
               ) dependencies
@@ -153,7 +163,9 @@
             builtins.attrValues (
               builtins.mapAttrs (
                 pkg: features:
-                "${pkg} = { version = \"*\", default-features = false, features = [ ${
+                "${pkg} = { version = \"${
+                  if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
+                }\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
                 } ] }"
               ) dev-dependencies

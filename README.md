@@ -1,4 +1,4 @@
-# Sigma Types in Rust
+# $\Sigma$-Types in Rust
 
 This crate lets you explicitly represent structures like _sorted vectors_ as types of their own.
 
@@ -35,9 +35,9 @@ $B$ often represents a proof that some property holds of $A$.
 (If exactly how is unclear and you have a few minutes and a mind to be blown,
 see [the Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence).)
 
-We implement a subset of sigma types in which $B$ is decidable
+We implement a subset of $\Sigma$-types in which $B$ is decidable
 and reduces to a `Result` whose error type is an `Option`al error message.
-In this case, a sigma type can represent a value for which some _computable_ property is checked.
+In this case, a $\Sigma$-type can represent a value for which some _computable_ property is checked.
 
 ### Why not call this library `invariant` or something?
 
@@ -46,4 +46,4 @@ by a library that requires `std` and `alloc`
 with larger structs that carry around their checks in release builds.
 This is all fine, but I have a different use-case, and this aims to be more generally applicable.
 
-Plus, sigma types are theoretically interesting, and I'd like to evangelize a bit.
+Plus, $\Sigma$-types are theoretically interesting, and I'd like to evangelize a bit.

@@ -30,9 +30,9 @@ Some languages, like [Coq](https://github.com/coq/coq?tab=readme-ov-file),
 implement type systems that offer _sigma types_ (or $\Sigma$-types),
 which represent a term (say, $A$) alongside another term (say, $B$)
 whose _type_ can depend on the _value_ of $A$.
-Since the type of $B$ can depend on the _value_ of $A$,
-$B$ often represents a _proof_ that some _property_ holds for $A$.
-(If exactly _how_ is unclear and you have a few minutes and a mind to be blown,
+Since the type of $B$ can depend on the value of $A$,
+$B$ often represents a proof that some property holds of $A$.
+(If exactly how is unclear and you have a few minutes and a mind to be blown,
 see [the Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence).)
 
 We implement a subset of sigma types in which $B$ is decidable

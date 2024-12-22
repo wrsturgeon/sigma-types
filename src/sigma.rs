@@ -2,6 +2,9 @@
 
 use core::{fmt, ops};
 
+#[cfg(not(debug_assertions))]
+use core::marker::PhantomData;
+
 /// Type that maintains a given invariant.
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
@@ -10,6 +13,8 @@ pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
     /// Function-like type that checks the raw type for a specified invariant.
     #[cfg(debug_assertions)]
     test: Invariant,
+    #[cfg(not(debug_assertions))]
+    phantom: PhantomData<Invariant>,
 }
 
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
@@ -132,7 +137,10 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     pub fn new(raw: Raw) -> Self {
         let provisional = Self {
             raw,
+            #[cfg(debug_assertions)]
             test: Default::default(),
+            #[cfg(not(debug_assertions))]
+            phantom: PhantomData,
         };
         provisional.check();
         provisional

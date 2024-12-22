@@ -17,6 +17,7 @@ quickcheck::quickcheck! {
                 if actually_sorted {
                     // Testing `Deref` method syntax:
                     if ok.is_sorted() {
+                        for _ in ok {}
                         TestResult::passed()
                     } else {
                         TestResult::error("sigma type not sorted")
@@ -43,6 +44,7 @@ quickcheck::quickcheck! {
                 if actually_sorted {
                     // Testing `Deref` method syntax:
                     if ok.is_sorted() {
+                        for _ in ok {}
                         TestResult::passed()
                     } else {
                         TestResult::error("sigma type not sorted")

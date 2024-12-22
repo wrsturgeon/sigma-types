@@ -93,7 +93,7 @@ where
 }
 */
 
-impl<Iter: Iterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
+impl<Iter: IntoIterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
     for Sorted<Iter, ALLOW_DUPLICATES>
 where
     for<'i> &'i Iter: IntoIterator,

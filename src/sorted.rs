@@ -75,6 +75,40 @@ impl<T: fmt::Debug> fmt::Display for OutOfOrder<T> {
 pub type Sorted<Iter, const ALLOW_DUPLICATES: bool> =
     crate::Sigma<Iter, SortedInvariant<Iter, ALLOW_DUPLICATES>>;
 
+/*
+impl<'iter, Iter: fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
+    for &'iter Sorted<Iter, ALLOW_DUPLICATES>
+where
+    for<'i> &'i Iter: IntoIterator,
+    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
+{
+    type Item = <&'iter Iter as IntoIterator>::Item;
+    type IntoIter = <&'iter Iter as IntoIterator>::IntoIter;
+
+    #[inline(always)]
+    fn into_iter(self) -> Self::IntoIter {
+        let iter: &'iter Iter = self.get_ref();
+        <&'iter Iter as IntoIterator>::into_iter(iter)
+    }
+}
+*/
+
+impl<Iter: Iterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
+    for Sorted<Iter, ALLOW_DUPLICATES>
+where
+    for<'i> &'i Iter: IntoIterator,
+    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
+{
+    type IntoIter = <Iter as IntoIterator>::IntoIter;
+    type Item = <Iter as IntoIterator>::Item;
+
+    #[inline(always)]
+    fn into_iter(self) -> Self::IntoIter {
+        let iter: Iter = self.get();
+        <Iter as IntoIterator>::into_iter(iter)
+    }
+}
+
 /// Ensure that an iterable data structure is sorted (optionally with or without duplicates).
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SortedInvariant<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool>(PhantomData<Iter>)
@@ -128,39 +162,5 @@ where
             }
         }
         Ok(())
-    }
-}
-
-/*
-impl<'iter, Iter: fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
-    for &'iter Sorted<Iter, ALLOW_DUPLICATES>
-where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
-{
-    type Item = <&'iter Iter as IntoIterator>::Item;
-    type IntoIter = <&'iter Iter as IntoIterator>::IntoIter;
-
-    #[inline(always)]
-    fn into_iter(self) -> Self::IntoIter {
-        let iter: &'iter Iter = self.get_ref();
-        <&'iter Iter as IntoIterator>::into_iter(iter)
-    }
-}
-*/
-
-impl<Iter: Iterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
-    for Sorted<Iter, ALLOW_DUPLICATES>
-where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
-{
-    type Item = <Iter as IntoIterator>::Item;
-    type IntoIter = <Iter as IntoIterator>::IntoIter;
-
-    #[inline(always)]
-    fn into_iter(self) -> Self::IntoIter {
-        let iter: Iter = self.get();
-        <Iter as IntoIterator>::into_iter(iter)
     }
 }

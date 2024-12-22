@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v27
+
+    - name: Install direnv
+      uses: aldoborrero/direnv-nix-action@v2
+      with:
+        use_nix_profile: true
+        nix_channel: nixpkgs
+
+    - name: Check formatting
+      run: find . -name '*.rs' | xargs rustfmt --check --edition 2024
+
+    - name: Cargo (check)
+      run: cargo check
+
+    - name: Nix (clippy)
+      run: nix run .\#clippy
+
+    - name: Cargo (build)
+      run: cargo build
+
+    - name: Nix (build)
+      run: nix build
+
+    - name: Cargo (test)
+      run: QUICKCHECK_TESTS=10000 cargo test

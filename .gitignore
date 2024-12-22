@@ -1,0 +1,6 @@
+**/.direnv
+**/.DS_Store
+**/result
+**/rust-toolchain.toml
+**/target
+**/rustc-ice-*

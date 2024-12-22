@@ -127,7 +127,7 @@
           name = "${pname}"
           version = "${version}"
           edition = "2024"
-          publish = false
+          publish = true
           authors = [ "Will Sturgeon" ]
           description = "${description}"
           readme = "README.md"

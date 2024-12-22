@@ -2,7 +2,7 @@
 name = "sigma-types"
 version = "0.1.0"
 edition = "2024"
-publish = false
+publish = true
 authors = [ "Will Sturgeon" ]
 description = "Types checked for an invariant."
 readme = "README.md"

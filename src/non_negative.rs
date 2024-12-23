@@ -22,10 +22,10 @@ impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<Z> {
     }
 }
 
-/// Non-negative types (defined by comparison to zero).
+/// Non-negative terms (defined by comparison to zero).
 pub type NonNegative<Z> = Sigma<Z, NonNegativeInvariant<Z>>;
 
-/// Non-negative types (defined by comparison to zero).
+/// Non-negative terms (defined by comparison to zero).
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonNegativeInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
 

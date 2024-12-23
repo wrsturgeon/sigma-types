@@ -22,10 +22,10 @@ impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<Z> 
     }
 }
 
-/// Positive types (defined by comparison to zero).
+/// Positive terms (defined by comparison to zero).
 pub type Positive<Z> = Sigma<Z, PositiveInvariant<Z>>;
 
-/// Positive types (defined by comparison to zero).
+/// Positive terms (defined by comparison to zero).
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct PositiveInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
 

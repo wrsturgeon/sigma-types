@@ -42,6 +42,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// # Panics
     /// If the invariant does not hold ***and*** debug assertions are enabled.
     #[inline]
+    #[cfg(debug_assertions)]
     pub fn check(&self) {
         #[expect(
             clippy::panic,
@@ -54,6 +55,11 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
             }
         }
     }
+
+    /// Do nothing (since debug assertions are disabled).
+    #[inline]
+    #[cfg(not(debug_assertions))]
+    pub const fn check(&self) {}
 
     /// Unwrap the internal value that satisfies the invariant.
     /// If you're using this to create another value that should
@@ -143,16 +149,26 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// # Panics
     /// If the invariant does not hold ***and*** debug assertions are enabled.
     #[inline]
+    #[cfg(debug_assertions)]
     pub fn new(raw: Raw) -> Self {
         let provisional = Self {
             raw,
-            #[cfg(debug_assertions)]
             test: Default::default(),
-            #[cfg(not(debug_assertions))]
-            phantom: PhantomData,
         };
         provisional.check();
         provisional
+    }
+
+    /// Create a new sigma type instance by checking an invariant.
+    /// # Panics
+    /// If the invariant does not hold ***and*** debug assertions are enabled.
+    #[inline]
+    #[cfg(not(debug_assertions))]
+    pub const fn new(raw: Raw) -> Self {
+        Self {
+            phantom: PhantomData,
+            raw,
+        }
     }
 
     /// Check an invariant without panicking.

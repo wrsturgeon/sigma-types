@@ -87,24 +87,6 @@ impl<T: fmt::Debug> fmt::Display for OutOfOrder<T> {
 pub type Sorted<Iter, const ALLOW_DUPLICATES: bool> =
     crate::Sigma<Iter, SortedInvariant<Iter, ALLOW_DUPLICATES>>;
 
-/*
-impl<'iter, Iter: fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
-    for &'iter Sorted<Iter, ALLOW_DUPLICATES>
-where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
-{
-    type Item = <&'iter Iter as IntoIterator>::Item;
-    type IntoIter = <&'iter Iter as IntoIterator>::IntoIter;
-
-    #[inline(always)]
-    fn into_iter(self) -> Self::IntoIter {
-        // Test `AsRef`/`Borrow`:
-        <&'iter Iter as IntoIterator>::into_iter(&self)
-    }
-}
-*/
-
 impl<
     Iter: IntoIterator + fmt::Debug,
     const ALLOW_DUPLICATES: bool,

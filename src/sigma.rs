@@ -1,7 +1,7 @@
 //! Type that maintains a given invariant.
 
 use {
-    crate::{non_negative::NonNegative, Zero},
+    crate::{Zero, non_negative::NonNegative},
     core::{borrow::Borrow, fmt, ops},
 };
 

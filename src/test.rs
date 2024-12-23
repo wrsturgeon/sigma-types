@@ -194,6 +194,30 @@ quickcheck::quickcheck! {
     }
 
     #[cfg(debug_assertions)]
+    fn positive_also_non_negative(i: i64) -> () {
+        type Positive = crate::Positive<i64>;
+        type NonNegative = crate::NonNegative<i64>;
+        let Ok(positive) = Positive::try_new(i) else {
+            return;
+        };
+        let _: &NonNegative = positive.also();
+    }
+
+    #[cfg(debug_assertions)]
+    fn non_negative_try_also_positive(i: i64) -> TestResult {
+        type NonNegative = crate::NonNegative<i64>;
+        type Positive = crate::Positive<i64>;
+        let Ok(non_negative) = NonNegative::try_new(i) else {
+            return TestResult::discard();
+        };
+        let maybe_also: Result<&Positive, _> = non_negative.try_also();
+        match maybe_also {
+            Ok(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
+            Err(e) => if i == 0 { TestResult::passed() } else { TestResult::error(format!("Positive but failed: {e}")) },
+        }
+    }
+
+    #[cfg(debug_assertions)]
     #[cfg(feature = "serde")]
     fn serde_roundtrip_positive_i64(i: i64) -> TestResult {
         type Positive = crate::Positive<i64>;

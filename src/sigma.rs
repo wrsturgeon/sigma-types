@@ -219,6 +219,22 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
         }
     }
 
+    /// Without changing its internal value,
+    /// try to view one sigma-typed value as implementing another sigma type
+    /// by checking the latter invariant at runtime.
+    #[inline]
+    pub fn try_also<OtherInvariant: crate::Test<Raw>>(
+        &self,
+    ) -> Result<&Sigma<Raw, OtherInvariant>, OtherInvariant::Error> {
+        let ptr: *const Self = self;
+        // SAFETY:
+        // Pointer reinterpretation. See `repr(transparent)` above.
+        // All non-zero-sized fields are identical across the cast.
+        let transmuted: &Sigma<Raw, OtherInvariant> = unsafe { &*ptr.cast() };
+        transmuted.try_check()?;
+        Ok(transmuted)
+    }
+
     /// Check an invariant without panicking.
     /// # Errors
     /// If the invariant does not hold.

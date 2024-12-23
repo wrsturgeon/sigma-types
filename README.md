@@ -40,9 +40,9 @@ some property holds of this particular value for $A$.
 (If exactly how is unclear and you have a few minutes and a mind to be blown,
 see [the Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence).)
 
-We implement a subset of $\Sigma$-types in which $B$ represents a decidable proposition,
-and thus, to decide whether a proof exists to inhabit $B$,
-we ask for a function that takes the value of $A$ and returns a Rust `Result`.
+We implement a subset of $\Sigma$-types in which $B$ represents a decidable proposition.
+To decide whether a proof exists to inhabit the type of $B$ (which isn't directly represented),
+the programmer supplies a Rust function that takes the value of $A$ and returns a `Result`.
 
 ### Why not call this library `invariant` or something more clear?
 

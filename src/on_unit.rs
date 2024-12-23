@@ -44,24 +44,12 @@ pub type OnUnit<U, const INCLUSIVE_AT_ZERO: bool, const INCLUSIVE_AT_ONE: bool> 
 
 /// Terms on the unit interval (between 0 and 1),
 /// either inclusive or exclusive at each extreme.
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OnUnitInvariant<
     U: Clone + One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
 >(PhantomData<U>);
-
-impl<
-    U: Clone + One + PartialOrd + Zero + fmt::Debug,
-    const INCLUSIVE_AT_ZERO: bool,
-    const INCLUSIVE_AT_ONE: bool,
-> Default for OnUnitInvariant<U, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
-{
-    #[inline(always)]
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
 
 impl<
     U: Clone + One + PartialOrd + Zero + fmt::Debug,

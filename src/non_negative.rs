@@ -26,28 +26,8 @@ impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<Z> {
 pub type NonNegative<Z> = Sigma<Z, NonNegativeInvariant<Z>>;
 
 /// Non-negative terms (defined by comparison to zero).
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonNegativeInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
-
-impl<Z: Clone + fmt::Debug + PartialOrd + Zero> NonNegativeInvariant<Z> {
-    /// `const` version of `Default::default`.
-    #[inline(always)]
-    #[cfg(debug_assertions)]
-    #[expect(
-        clippy::single_call_fn,
-        reason = "Useful in another file with different visibility"
-    )]
-    pub(crate) const fn new() -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Default for NonNegativeInvariant<Z> {
-    #[inline(always)]
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
 
 impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Test<Z> for NonNegativeInvariant<Z> {
     const ADJECTIVE: &str = "non-negative";

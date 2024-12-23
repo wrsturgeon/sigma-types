@@ -3,7 +3,7 @@
 This crate lets you explicitly represent structures like _sorted vectors_ as types of their own.
 
 ## Features
-- `Deref`:
+- `Deref`, `AsRef`, and `Borrow`:
   if `x` implements `x.foo(..)`,
   then a $\Sigma$-type `s` wrapping `x`
   automatically implements `s.foo(..)`.
@@ -21,6 +21,10 @@ This crate lets you explicitly represent structures like _sorted vectors_ as typ
   invariants about their functions' return values
   with an easily unwrappable, lightweight type
   that disappears in release builds.
+- Zero-size wrapper type (`repr(transparent)`):
+  Wrapping a `T` in `Sigma<T, ..>` creates a type that uses
+  exactly the same binary representation as `T`;
+  all it does is add an extra `PhantomData` field.
 - `no_std` (and no `alloc`):
   all features, including error messages (via `::core::fmt::Display`),
   work without the standard library and without heap allocation.
@@ -39,11 +43,10 @@ We implement a subset of $\Sigma$-types in which $B$ is decidable
 and reduces to a `Result` whose error type is an `Option`al error message.
 In this case, a $\Sigma$-type can represent a value for which some _computable_ property is checked.
 
-### Why not call this library `invariant` or something?
+### Why not call this library `invariant` or something more clear?
 
-It [seems to be taken](https://github.com/pthariensflame/invariant.rs)
-by a library that requires `std` and `alloc`
-with larger structs that carry around their checks in release builds.
-This is all fine, but I have a different use-case, and this aims to be more generally applicable.
+`invariant` [is already a similar library](https://github.com/pthariensflame/invariant.rs),
+but it requires `std` and `alloc`, and it uses larger structs that run checks in release builds.
+That's fine, but I have a different use-case, and this aims to be more generally applicable.
 
 Plus, $\Sigma$-types are theoretically interesting, and I'd like to evangelize a bit.

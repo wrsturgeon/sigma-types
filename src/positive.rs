@@ -26,15 +26,8 @@ impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<Z> 
 pub type Positive<Z> = Sigma<Z, PositiveInvariant<Z>>;
 
 /// Positive terms (defined by comparison to zero).
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct PositiveInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
-
-impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Default for PositiveInvariant<Z> {
-    #[inline(always)]
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
 
 impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Test<Z> for PositiveInvariant<Z> {
     const ADJECTIVE: &str = "positive";

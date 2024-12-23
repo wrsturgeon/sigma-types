@@ -106,23 +106,11 @@ where
 }
 
 /// Ensure that an iterable data structure is sorted (optionally with or without duplicates).
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SortedInvariant<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool>(PhantomData<Iter>)
 where
     for<'i> &'i Iter: IntoIterator,
     for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd;
-
-impl<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool> Default
-    for SortedInvariant<Iter, ALLOW_DUPLICATES>
-where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
-{
-    #[inline(always)]
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
 
 impl<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool, Item: Clone + PartialOrd + fmt::Debug>
     crate::Test<Iter> for SortedInvariant<Iter, ALLOW_DUPLICATES>

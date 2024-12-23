@@ -1,43 +1,91 @@
 //! Type that maintains a given invariant.
 
 use {
-    crate::{Zero, non_negative::NonNegative},
-    core::{borrow::Borrow, fmt, ops},
+    crate::{NonNegative, OnUnit, One, Positive, Zero},
+    core::{borrow::Borrow, fmt, marker::PhantomData, ops},
 };
-
-#[cfg(debug_assertions)]
-use crate::non_negative::NonNegativeInvariant;
-
-#[cfg(not(debug_assertions))]
-use core::marker::PhantomData;
 
 #[cfg(feature = "std")]
 use std::env;
 
+impl<T: Clone + One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
+    const ONE: Self = Self {
+        phantom: PhantomData,
+        raw: T::ONE,
+    };
+}
+
 impl<Z: Clone + PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
     const ZERO: Self = Self {
-        raw: Z::ZERO,
-        #[cfg(debug_assertions)]
-        test: NonNegativeInvariant::new(),
-        #[cfg(not(debug_assertions))]
         phantom: PhantomData,
+        raw: Z::ZERO,
+    };
+}
+
+impl<T: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: bool> One
+    for OnUnit<T, INCLUSIVE_AT_ZERO, true>
+{
+    const ONE: Self = Self {
+        phantom: PhantomData,
+        raw: T::ONE,
+    };
+}
+
+impl<Z: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ONE: bool> Zero
+    for OnUnit<Z, true, INCLUSIVE_AT_ONE>
+{
+    const ZERO: Self = Self {
+        phantom: PhantomData,
+        raw: Z::ZERO,
+    };
+}
+
+impl<T: Clone + One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
+    const ONE: Self = Self {
+        phantom: PhantomData,
+        raw: T::ONE,
     };
 }
 
 /// Type that maintains a given invariant.
+#[repr(transparent)]
 #[derive(Copy, Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
-    /// Just to silence compiler errors.
-    #[cfg(not(debug_assertions))]
+    /// Only to silence compiler errors.
     phantom: PhantomData<Invariant>,
     /// Internal type (to which this type will reduce in release builds).
     raw: Raw,
-    /// Function-like type that checks the raw type for a specified invariant.
-    #[cfg(debug_assertions)]
-    test: Invariant,
 }
 
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
+    /// Without changing its internal value,
+    /// view one sigma-typed value as implementing another sigma type
+    /// by checking the latter invariant at runtime (iff debug assertions are enabled).
+    #[inline]
+    #[cfg(debug_assertions)]
+    pub fn also<OtherInvariant: crate::Test<Raw>>(&self) -> &Sigma<Raw, OtherInvariant> {
+        let ptr: *const Self = self;
+        // SAFETY:
+        // Pointer reinterpretation. See `repr(transparent)` above.
+        // All non-zero-sized fields are identical across the cast.
+        let transmuted: &Sigma<Raw, OtherInvariant> = unsafe { &*ptr.cast() };
+        transmuted.check();
+        transmuted
+    }
+
+    /// Without changing its internal value,
+    /// view one sigma-typed value as implementing another sigma type
+    /// by checking the latter invariant at runtime (iff debug assertions are enabled).
+    #[inline]
+    #[cfg(not(debug_assertions))]
+    pub const fn also<OtherInvariant: crate::Test<Raw>>(&self) -> &Sigma<Raw, OtherInvariant> {
+        let ptr: *const Self = self;
+        // SAFETY:
+        // Pointer reinterpretation. See `repr(transparent)` above.
+        // All non-zero-sized fields are identical across the cast.
+        unsafe { &*ptr.cast() }
+    }
+
     /// Check an invariant if and only if debug assertions are enabled.
     /// # Panics
     /// If the invariant does not hold ***and*** debug assertions are enabled.
@@ -152,8 +200,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     #[cfg(debug_assertions)]
     pub fn new(raw: Raw) -> Self {
         let provisional = Self {
+            phantom: PhantomData,
             raw,
-            test: Default::default(),
         };
         provisional.check();
         provisional
@@ -185,11 +233,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     #[inline]
     pub fn try_new(raw: Raw) -> Result<Self, Invariant::Error> {
         let provisional = Self {
-            raw,
-            #[cfg(debug_assertions)]
-            test: Default::default(),
-            #[cfg(not(debug_assertions))]
             phantom: PhantomData,
+            raw,
         };
         provisional.try_check()?;
         Ok(provisional)
@@ -250,11 +295,8 @@ impl<'de, Raw: fmt::Debug + serde::Deserialize<'de>, Invariant: crate::Test<Raw>
 
         let raw = Raw::deserialize(deserializer)?;
         let provisional = Self {
-            raw,
-            #[cfg(debug_assertions)]
-            test: Default::default(),
-            #[cfg(not(debug_assertions))]
             phantom: PhantomData,
+            raw,
         };
         match provisional.try_check() {
             Ok(()) => {}

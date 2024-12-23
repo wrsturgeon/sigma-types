@@ -3,7 +3,7 @@
 use core::fmt;
 
 /// Function-like type that checks an invariant and optionally provides an error message.
-pub trait Test<Input: fmt::Debug>: Default {
+pub trait Test<Input: fmt::Debug> {
     /// Adjective to describe this test:
     /// for example, if we're testing A,
     /// then this is B in "A is not B."

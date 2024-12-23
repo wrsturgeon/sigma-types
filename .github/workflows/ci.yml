@@ -47,5 +47,6 @@ jobs:
 
     - name: Cargo (miri)
       run: |
+        sed -i 's/.*2021.*//g' Cargo.toml
         sed -i 's/2024/2021/g' Cargo.toml
         nix run .\#miri

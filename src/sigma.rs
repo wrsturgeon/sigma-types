@@ -96,6 +96,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// Apply a function to a term that implements a given invariant (say, A),
     /// then check the output for a (possibly different) invariant (say, B).
     #[inline]
+    #[expect(clippy::allow_attributes, reason = "Edition 2021 only")]
+    #[allow(tail_expr_drop_order, reason = "just for miri")]
     pub fn map<
         OtherRaw: fmt::Debug,
         OtherInvariant: crate::Test<OtherRaw>,
@@ -110,6 +112,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// Apply a function to a term that implements a given invariant (say, A),
     /// then check the output for a (possibly different) invariant (say, B).
     #[inline]
+    #[expect(clippy::allow_attributes, reason = "Edition 2021 only")]
+    #[allow(tail_expr_drop_order, reason = "just for miri")]
     pub fn map_ref<
         OtherRaw: fmt::Debug,
         OtherInvariant: crate::Test<OtherRaw>,

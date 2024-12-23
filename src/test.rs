@@ -149,11 +149,11 @@ quickcheck::quickcheck! {
                 }
             }
             Err(e) => {
-                if actually_positive {
-                    return TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"));
+                return if actually_positive {
+                    TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"))
                 } else {
-                    return TestResult::passed();
-                }
+                    TestResult::passed()
+                };
             }
         };
         if i == *rust.as_ref() {

@@ -63,6 +63,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// If you're using this to create another value that should
     /// also maintain an invariant, use `map` instead.
     #[inline(always)]
+    #[expect(clippy::allow_attributes, reason = "Edition 2021 only")]
     #[allow(tail_expr_drop_order, reason = "just for miri")]
     pub fn get_by<Y, F: FnOnce(Raw) -> Y>(self, f: F) -> Y {
         f(self.get())
@@ -81,7 +82,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// also maintain an invariant, use `map` instead.
     #[inline(always)]
     pub fn get_by_ref<Y, F: FnOnce(&Raw) -> Y>(&self, f: F) -> Y {
-        f(&self)
+        f(self)
     }
 
     /// Unwrap the internal value that satisfies the invariant.
@@ -103,9 +104,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
         self,
         f: F,
     ) -> Sigma<OtherRaw, OtherInvariant> {
-        let raw = self.get();
-        let other_raw = f(raw);
-        Sigma::new(other_raw)
+        Sigma::new(f(self.get()))
     }
 
     /// Apply a function to a term that implements a given invariant (say, A),
@@ -119,9 +118,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
         &self,
         f: F,
     ) -> Sigma<OtherRaw, OtherInvariant> {
-        // Test `AsRef`/`Borrow`:
-        let other_raw = f(&self);
-        Sigma::new(other_raw)
+        Sigma::new(f(self))
     }
 
     /// Apply a function that mutates this value,
@@ -157,27 +154,6 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     pub fn try_check(&self) -> Result<(), Invariant::Error<'_>> {
         Invariant::test(&self.raw)
     }
-
-    /*
-    /// Create a new sigma type instance by checking an invariant.
-    /// # Errors
-    /// If the invariant does not hold.
-    #[inline]
-    pub fn try_new(raw: Raw) -> Result<Self, Invariant::Error<'_>> {
-        let provisional = Self {
-            raw,
-            #[cfg(debug_assertions)]
-            test: Default::default(),
-            #[cfg(not(debug_assertions))]
-            phantom: PhantomData,
-        };
-        match provisional.try_check() {
-            Ok(()) => {}
-            Err(e) => return Err(e),
-        }
-        Ok(provisional)
-    }
-    */
 }
 
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> AsRef<Raw> for Sigma<Raw, Invariant> {
@@ -229,7 +205,6 @@ impl<'de, Raw: fmt::Debug + serde::Deserialize<'de>, Invariant: crate::Test<Raw>
 }
 
 #[cfg(feature = "serde")]
-#[expect(clippy::missing_trait_methods, reason = "I'm no expert")]
 impl<Raw: fmt::Debug + serde::Serialize, Invariant: crate::Test<Raw>> serde::Serialize
     for Sigma<Raw, Invariant>
 {

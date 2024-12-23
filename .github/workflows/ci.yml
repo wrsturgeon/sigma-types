@@ -41,9 +41,7 @@ jobs:
       run: nix build
 
     - name: Cargo (test)
-      run: |
-        QUICKCHECK_TESTS=10000 cargo test
-        QUICKCHECK_TESTS=10000 cargo test --all-features
+      run: QUICKCHECK_TESTS=10000 nix run .\#test
 
     - name: Cargo (miri)
       run: |

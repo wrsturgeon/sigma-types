@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.1.7";
+        version = "0.1.8";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -270,7 +270,6 @@
               '';
 
               test = ''
-                export QUICKCHECK_TESTS=1000
                 cargo test
                 cargo test --release
                 cargo test --all-features

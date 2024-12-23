@@ -22,7 +22,7 @@ impl<Z: Clone + PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
 }
 
 /// Type that maintains a given invariant.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
     /// Just to silence compiler errors.
     #[cfg(not(debug_assertions))]
@@ -188,6 +188,23 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Borrow<Raw> for Sigma<Raw, In
     #[inline(always)]
     fn borrow(&self) -> &Raw {
         &self.raw
+    }
+}
+
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> fmt::Debug for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ", Invariant::ADJECTIVE)?;
+        self.raw.fmt(f)
+    }
+}
+
+impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw>> fmt::Display
+    for Sigma<Raw, Invariant>
+{
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.raw, f)
     }
 }
 

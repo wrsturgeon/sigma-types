@@ -11,6 +11,9 @@ use crate::non_negative::NonNegativeInvariant;
 #[cfg(not(debug_assertions))]
 use core::marker::PhantomData;
 
+#[cfg(feature = "std")]
+use std::env;
+
 impl<Z: Clone + PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
     const ZERO: Self = Self {
         raw: Z::ZERO,
@@ -195,7 +198,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> fmt::Debug for Sigma<Raw, Inv
     #[inline(always)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[cfg(feature = "std")]
-        if std::env::var("DEBUG_SIGMA_TYPES").is_ok_and(|s| s != "0") {
+        if env::var("DEBUG_SIGMA_TYPES").is_ok_and(|s| s != "0") {
             write!(f, "({}) ", Invariant::ADJECTIVE)?;
         }
         fmt::Debug::fmt(&self.raw, f)

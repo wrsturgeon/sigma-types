@@ -8,13 +8,13 @@ pub trait Test<Input: fmt::Debug>: Default {
     /// for example, if we're testing A,
     /// then this is B in "A is not B."
     const ADJECTIVE: &str;
+
     /// An error implementing `::core::fmt::Display`.
     /// If none is ever provided, please use `::core::convert::Infallible`.
-    type Error<'input>: fmt::Display
-    where
-        Input: 'input;
+    type Error: fmt::Display;
+
     /// Check whether a given term satisfies this invariant.
     /// # Errors
     /// If it doesn't.
-    fn test(input: &Input) -> Result<(), Self::Error<'_>>;
+    fn test(input: &Input) -> Result<(), Self::Error>;
 }

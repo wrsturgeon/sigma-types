@@ -7,9 +7,9 @@ use {
 
 /// A term expected to be non-negative was, in fact, negative.
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Negative<'z, Z: fmt::Debug + PartialOrd + Zero>(&'z Z);
+pub struct Negative<Z: Clone + fmt::Debug + PartialOrd + Zero>(Z);
 
-impl<Z: fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<'_, Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<Z> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #![expect(
@@ -17,7 +17,7 @@ impl<Z: fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<'_, Z> {
             reason = "Intentional and informative, not just forgotten print-debugging"
         )]
 
-        let Self(z) = *self;
+        let Self(ref z) = *self;
         write!(f, "{z:#?} < {:#?}", Z::ZERO)
     }
 }
@@ -27,9 +27,9 @@ pub type NonNegative<Z> = Sigma<Z, NonNegativeInvariant<Z>>;
 
 /// Non-negative types (defined by comparison to zero).
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NonNegativeInvariant<Z: fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
+pub struct NonNegativeInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
 
-impl<Z: fmt::Debug + PartialOrd + Zero> NonNegativeInvariant<Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> NonNegativeInvariant<Z> {
     /// `const` version of `Default::default`.
     #[inline(always)]
     #[cfg(debug_assertions)]
@@ -42,26 +42,23 @@ impl<Z: fmt::Debug + PartialOrd + Zero> NonNegativeInvariant<Z> {
     }
 }
 
-impl<Z: fmt::Debug + PartialOrd + Zero> Default for NonNegativeInvariant<Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Default for NonNegativeInvariant<Z> {
     #[inline(always)]
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<Z: fmt::Debug + PartialOrd + Zero> Test<Z> for NonNegativeInvariant<Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Test<Z> for NonNegativeInvariant<Z> {
     const ADJECTIVE: &str = "non-negative";
-    type Error<'input>
-        = Negative<'input, Z>
-    where
-        Z: 'input;
+    type Error = Negative<Z>;
 
     #[inline(always)]
-    fn test(input: &Z) -> Result<(), Self::Error<'_>> {
+    fn test(input: &Z) -> Result<(), Self::Error> {
         if *input >= Z::ZERO {
             Ok(())
         } else {
-            Err(Negative(input))
+            Err(Negative(input.clone()))
         }
     }
 }

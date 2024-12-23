@@ -11,7 +11,7 @@ use crate::non_negative::NonNegativeInvariant;
 #[cfg(not(debug_assertions))]
 use core::marker::PhantomData;
 
-impl<Z: fmt::Debug + PartialOrd + Zero> Zero for NonNegative<Z> {
+impl<Z: Clone + PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
     const ZERO: Self = Self {
         raw: Z::ZERO,
         #[cfg(debug_assertions)]
@@ -24,13 +24,14 @@ impl<Z: fmt::Debug + PartialOrd + Zero> Zero for NonNegative<Z> {
 /// Type that maintains a given invariant.
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
+    /// Just to silence compiler errors.
+    #[cfg(not(debug_assertions))]
+    phantom: PhantomData<Invariant>,
     /// Internal type (to which this type will reduce in release builds).
     raw: Raw,
     /// Function-like type that checks the raw type for a specified invariant.
     #[cfg(debug_assertions)]
     test: Invariant,
-    #[cfg(not(debug_assertions))]
-    phantom: PhantomData<Invariant>,
 }
 
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
@@ -155,8 +156,24 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// # Errors
     /// If the invariant does not hold.
     #[inline(always)]
-    pub fn try_check(&self) -> Result<(), Invariant::Error<'_>> {
+    pub fn try_check(&self) -> Result<(), Invariant::Error> {
         Invariant::test(&self.raw)
+    }
+
+    /// Create a new sigma type instance by checking an invariant.
+    /// # Errors
+    /// If the invariant does not hold.
+    #[inline]
+    pub fn try_new(raw: Raw) -> Result<Self, Invariant::Error> {
+        let provisional = Self {
+            raw,
+            #[cfg(debug_assertions)]
+            test: Default::default(),
+            #[cfg(not(debug_assertions))]
+            phantom: PhantomData,
+        };
+        provisional.try_check()?;
+        Ok(provisional)
     }
 }
 

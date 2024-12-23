@@ -264,7 +264,17 @@
               miri = ''
                 export QUICKCHECK_TESTS=10
                 cargo miri test
+                cargo miri test --release
                 cargo miri test --all-features
+                cargo miri test --all-features --release
+              '';
+
+              test = ''
+                export QUICKCHECK_TESTS=1000
+                cargo test
+                cargo test --release
+                cargo test --all-features
+                cargo test --all-features --release
               '';
 
               update-other-cargo-files =
@@ -287,7 +297,9 @@
                 set -e
 
                 ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --release
                 ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --all-features
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --all-features --release
               '';
             };
         packages = {

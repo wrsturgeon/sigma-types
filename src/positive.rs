@@ -7,9 +7,9 @@ use {
 
 /// A term expected to be positive was not.
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NonPositive<'z, Z: fmt::Debug + PartialOrd + Zero>(&'z Z);
+pub struct NonPositive<Z: Clone + fmt::Debug + PartialOrd + Zero>(Z);
 
-impl<Z: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<Z> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #![expect(
@@ -17,7 +17,7 @@ impl<Z: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Z> {
             reason = "Intentional and informative, not just forgotten print-debugging"
         )]
 
-        let Self(z) = *self;
+        let Self(ref z) = *self;
         write!(f, "{z:#?} <= {:#?}", Z::ZERO)
     }
 }
@@ -27,28 +27,25 @@ pub type Positive<Z> = Sigma<Z, PositiveInvariant<Z>>;
 
 /// Positive types (defined by comparison to zero).
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct PositiveInvariant<Z: fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
+pub struct PositiveInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
 
-impl<Z: fmt::Debug + PartialOrd + Zero> Default for PositiveInvariant<Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Default for PositiveInvariant<Z> {
     #[inline(always)]
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<Z: fmt::Debug + PartialOrd + Zero> Test<Z> for PositiveInvariant<Z> {
+impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Test<Z> for PositiveInvariant<Z> {
     const ADJECTIVE: &str = "positive";
-    type Error<'input>
-        = NonPositive<'input, Z>
-    where
-        Z: 'input;
+    type Error = NonPositive<Z>;
 
     #[inline(always)]
-    fn test(input: &Z) -> Result<(), Self::Error<'_>> {
+    fn test(input: &Z) -> Result<(), Self::Error> {
         if *input > Z::ZERO {
             Ok(())
         } else {
-            Err(NonPositive(input))
+            Err(NonPositive(input.clone()))
         }
     }
 }

@@ -105,11 +105,13 @@ where
 }
 */
 
-impl<Iter: IntoIterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
-    for Sorted<Iter, ALLOW_DUPLICATES>
+impl<
+    Iter: IntoIterator + fmt::Debug,
+    const ALLOW_DUPLICATES: bool,
+    Item: Clone + PartialOrd + fmt::Debug,
+> IntoIterator for Sorted<Iter, ALLOW_DUPLICATES>
 where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
+    for<'i> &'i Iter: IntoIterator<Item = &'i Item>,
 {
     type IntoIter = <Iter as IntoIterator>::IntoIter;
     type Item = <Iter as IntoIterator>::Item;
@@ -140,24 +142,22 @@ where
     }
 }
 
-impl<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool> crate::Test<Iter>
-    for SortedInvariant<Iter, ALLOW_DUPLICATES>
+impl<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool, Item: Clone + PartialOrd + fmt::Debug>
+    crate::Test<Iter> for SortedInvariant<Iter, ALLOW_DUPLICATES>
 where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
+    for<'i> &'i Iter: IntoIterator<Item = &'i Item>,
 {
     const ADJECTIVE: &str = "sorted";
 
-    type Error<'input>
-        = OutOfOrder<<&'input Iter as IntoIterator>::Item>
-    where
-        Iter: 'input;
+    type Error = OutOfOrder<Item>;
 
     #[inline]
-    fn test(input: &Iter) -> Result<(), Self::Error<'_>> {
+    fn test(input: &Iter) -> Result<(), Self::Error> {
         let mut iter = input.into_iter();
-        if let Some(mut last) = iter.next() {
-            for current in iter {
+        if let Some(last_ref) = iter.next() {
+            let mut last = last_ref.clone();
+            for current_ref in iter {
+                let current = current_ref.clone();
                 match last.partial_cmp(&current) {
                     None => return Err(OutOfOrder::NoDefinedComparison { current, last }),
                     Some(Ordering::Less) => {}

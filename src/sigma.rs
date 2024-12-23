@@ -61,6 +61,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// Without changing its internal value,
     /// view one sigma-typed value as implementing another sigma type
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).
+    /// # Panics
+    /// If the latter invariant does not hold.
     #[inline]
     #[cfg(debug_assertions)]
     pub fn also<OtherInvariant: crate::Test<Raw>>(&self) -> &Sigma<Raw, OtherInvariant> {
@@ -222,6 +224,8 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// Without changing its internal value,
     /// try to view one sigma-typed value as implementing another sigma type
     /// by checking the latter invariant at runtime.
+    /// # Errors
+    /// If the latter invariant does not hold.
     #[inline]
     pub fn try_also<OtherInvariant: crate::Test<Raw>>(
         &self,

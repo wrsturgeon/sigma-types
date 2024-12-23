@@ -99,8 +99,8 @@ where
 
     #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {
-        let iter: &'iter Iter = self.get_ref();
-        <&'iter Iter as IntoIterator>::into_iter(iter)
+        // Test `AsRef`/`Borrow`:
+        <&'iter Iter as IntoIterator>::into_iter(&self)
     }
 }
 */

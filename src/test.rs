@@ -1,6 +1,9 @@
 extern crate alloc;
 extern crate std;
 
+#[cfg(not(feature = "serde"))]
+use serde_json as _;
+
 use {
     crate::{NonNegative, Zero as _},
     alloc::{format, vec::Vec},
@@ -105,6 +108,58 @@ quickcheck::quickcheck! {
                     TestResult::passed()
                 }
             }
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    fn serde_roundtrip_positive_i64(i: i64) -> TestResult {
+        type Positive = crate::Positive<i64>;
+        let Ok(positive) = catch_unwind(|| Positive::new(i)) else {
+            return TestResult::discard();
+        };
+        let json = match serde_json::to_string(&positive) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't serialize {positive:#?}: {e}"))
+        };
+        let rust: Positive = match serde_json::from_str(&json) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"))
+        };
+        if positive == rust {
+            TestResult::passed()
+        } else {
+            TestResult::error(format!("{positive:#?} -> {json:#?} -> {rust:#?} =/= {positive:#?}"))
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    fn serde_fallible_positive_i64(i: i64) -> TestResult {
+        type Positive = crate::Positive<i64>;
+        let actually_positive = i > 0;
+        let json = match serde_json::to_string(&i) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't serialize {i:#?}: {e}"))
+        };
+        let rust: Positive = match serde_json::from_str(&json) {
+            Ok(ok) => {
+                if actually_positive {
+                    ok
+                } else {
+                    return TestResult::error(format!("Not positive, but deserialization succeeded: {i}"));
+                }
+            }
+            Err(e) => {
+                if actually_positive {
+                    return TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"));
+                } else {
+                    return TestResult::passed();
+                }
+            }
+        };
+        if i == *rust.as_ref() {
+            TestResult::passed()
+        } else {
+            TestResult::error(format!("{i:#?} -> {json:#?} -> {rust:#?} =/= {i:#?}"))
         }
     }
 }

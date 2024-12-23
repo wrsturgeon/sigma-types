@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.1.5";
+        version = "0.1.6";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -69,11 +69,18 @@
         dependencies = { };
         dev-dependencies = {
           quickcheck = [ ];
+          serde_json = [ "std" ];
         };
         features = {
           malachite = {
             dependencies = {
               malachite-base = [ ];
+            };
+            other-features = [ ];
+          };
+          serde = {
+            dependencies = {
+              serde = [ ];
             };
             other-features = [ ];
           };
@@ -254,7 +261,11 @@
             {
               inherit update-cargo-toml;
 
-              miri = "cargo miri test";
+              miri = ''
+                export QUICKCHECK_TESTS=10
+                cargo miri test
+                cargo miri test --all-features
+              '';
 
               update-other-cargo-files =
                 let
@@ -275,7 +286,8 @@
                 fi
                 set -e
 
-                ${full-toolchain}/bin/cargo-clippy -- --all-features --all-targets --color=always
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --all-features
               '';
             };
         packages = {

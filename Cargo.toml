@@ -1,7 +1,7 @@
 [package]
 name = "sigma-types"
-version = "0.1.5"
-edition = "2024"
+version = "0.1.6"
+edition = "2021"
 publish = true
 authors = [ "Will Sturgeon" ]
 description = "Types checked for an invariant."
@@ -15,12 +15,15 @@ categories = [ "data-structures", "development-tools", "mathematics", "no-std", 
 [dependencies]
 
 malachite-base = { version = "=0.4.16", default-features = false, features = [  ], optional = true }
+serde = { version = "=1.0.216", default-features = false, features = [  ], optional = true }
 
 [dev-dependencies]
 quickcheck = { version = "=1.0.3", default-features = false, features = [  ] }
+serde_json = { version = "=1.0.134", default-features = false, features = [ "std" ] }
 
 [features]
 malachite = [ "dep:malachite-base" ]
+serde = [ "dep:serde" ]
 
 [lints.rust]
 abi-unsupported-vector-types = "deny"

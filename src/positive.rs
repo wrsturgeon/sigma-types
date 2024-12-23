@@ -18,7 +18,7 @@ impl<Z: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Z> {
         )]
 
         let Self(z) = *self;
-        write!(f, "{z:#?} < {:#?}", Z::ZERO)
+        write!(f, "{z:#?} <= {:#?}", Z::ZERO)
     }
 }
 

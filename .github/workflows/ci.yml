@@ -41,4 +41,11 @@ jobs:
       run: nix build
 
     - name: Cargo (test)
-      run: QUICKCHECK_TESTS=10000 cargo test
+      run: |
+        QUICKCHECK_TESTS=10000 cargo test
+        QUICKCHECK_TESTS=10000 cargo test --all-features
+
+    - name: Cargo (miri)
+      run: |
+        sed -i 's/2024/2021/g' Cargo.toml
+        nix run .\#miri

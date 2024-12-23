@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.1.10";
+        version = "0.1.11";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {

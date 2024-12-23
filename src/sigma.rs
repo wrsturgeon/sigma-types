@@ -30,8 +30,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
         )]
         match Invariant::test(&self.raw) {
             Ok(()) => {}
-            Err(None) => panic!("{:#?} is not {}", self.raw, Invariant::ADJECTIVE),
-            Err(Some(message)) => {
+            Err(message) => {
                 panic!("{:#?} is not {}: {message}", self.raw, Invariant::ADJECTIVE);
             }
         }
@@ -42,7 +41,6 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// also maintain an invariant, use `map` instead.
     #[inline(always)]
     pub fn get(self) -> Raw {
-        self.check();
         self.raw
     }
 
@@ -74,8 +72,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// If you're using this to create another value that should
     /// also maintain an invariant, use `map` instead.
     #[inline(always)]
-    pub fn get_mut(&mut self) -> &mut Raw {
-        self.check();
+    pub const fn get_mut(&mut self) -> &mut Raw {
         &mut self.raw
     }
 
@@ -83,8 +80,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// If you're using this to create another value that should
     /// also maintain an invariant, use `map` instead.
     #[inline(always)]
-    pub fn get_ref(&self) -> &Raw {
-        self.check();
+    pub const fn get_ref(&self) -> &Raw {
         &self.raw
     }
 

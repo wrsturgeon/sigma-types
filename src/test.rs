@@ -62,4 +62,46 @@ quickcheck::quickcheck! {
             }
         }
     }
+
+    fn i64_non_negative(i: i64) -> TestResult {
+        type NonNegative = crate::NonNegative<i64>;
+        let actually_non_negative = i >= 0;
+        match catch_unwind(|| NonNegative::new(i)) {
+            Ok(..) => {
+                if actually_non_negative {
+                    TestResult::passed()
+                } else {
+                    TestResult::error("negative but passed")
+                }
+            }
+            Err(e) => {
+                if actually_non_negative {
+                    TestResult::error(format!("non-negative but failed: {e:#?}"))
+                } else {
+                    TestResult::passed()
+                }
+            }
+        }
+    }
+
+    fn i64_positive(i: i64) -> TestResult {
+        type Positive = crate::Positive<i64>;
+        let actually_positive = i > 0;
+        match catch_unwind(|| Positive::new(i)) {
+            Ok(..) => {
+                if actually_positive {
+                    TestResult::passed()
+                } else {
+                    TestResult::error("non-positive but passed")
+                }
+            }
+            Err(e) => {
+                if actually_positive {
+                    TestResult::error(format!("positive but failed: {e:#?}"))
+                } else {
+                    TestResult::passed()
+                }
+            }
+        }
+    }
 }

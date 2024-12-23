@@ -7,7 +7,7 @@ pub trait Test<Input: fmt::Debug>: Default {
     /// Adjective to describe this test:
     /// for example, if we're testing A,
     /// then this is B in "A is not B."
-    const ADJECTIVE: &'static str;
+    const ADJECTIVE: &str;
     /// An error implementing `::core::fmt::Display`.
     /// If none is ever provided, please use `::core::convert::Infallible`.
     type Error<'input>: fmt::Display
@@ -16,5 +16,5 @@ pub trait Test<Input: fmt::Debug>: Default {
     /// Check whether a given term satisfies this invariant.
     /// # Errors
     /// If it doesn't.
-    fn test(input: &Input) -> Result<(), Option<Self::Error<'_>>>;
+    fn test(input: &Input) -> Result<(), Self::Error<'_>>;
 }

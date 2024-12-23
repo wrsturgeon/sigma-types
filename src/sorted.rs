@@ -48,24 +48,36 @@ impl<T: fmt::Debug> fmt::Display for OutOfOrder<T> {
                     f,
                     "Duplicate element (not allowed since `ALLOW_DUPLICATES = false`):",
                 )?;
-                writeln!(f, "    current element {current:#?}")?;
-                writeln!(f, "       last element {last:#?}")
+                writeln!(f)?;
+                writeln!(f, "current element:")?;
+                writeln!(f, "{current:#?}")?;
+                writeln!(f)?;
+                writeln!(f, "last element:")?;
+                writeln!(f, "{last:#?}")
             }
             Self::NoDefinedComparison {
                 ref current,
                 ref last,
             } => {
                 writeln!(f, "No defined comparison:")?;
-                writeln!(f, "    current element {current:#?}")?;
-                writeln!(f, "       last element {last:#?}")
+                writeln!(f)?;
+                writeln!(f, "current element:")?;
+                writeln!(f, "{current:#?}")?;
+                writeln!(f)?;
+                writeln!(f, "last element:")?;
+                writeln!(f, "{last:#?}")
             }
             Self::Swapped {
                 ref current,
                 ref last,
             } => {
                 writeln!(f, "Out of order:")?;
-                writeln!(f, "    current element {current:#?}")?;
-                writeln!(f, "       last element {last:#?}")
+                writeln!(f)?;
+                writeln!(f, "current element:")?;
+                writeln!(f, "{current:#?}")?;
+                writeln!(f)?;
+                writeln!(f, "last element:")?;
+                writeln!(f, "{last:#?}")
             }
         }
     }
@@ -134,7 +146,7 @@ where
     for<'i> &'i Iter: IntoIterator,
     for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd,
 {
-    const ADJECTIVE: &'static str = "sorted";
+    const ADJECTIVE: &str = "sorted";
 
     type Error<'input>
         = OutOfOrder<<&'input Iter as IntoIterator>::Item>
@@ -142,20 +154,20 @@ where
         Iter: 'input;
 
     #[inline]
-    fn test(input: &Iter) -> Result<(), Option<Self::Error<'_>>> {
+    fn test(input: &Iter) -> Result<(), Self::Error<'_>> {
         let mut iter = input.into_iter();
         if let Some(mut last) = iter.next() {
             for current in iter {
                 match last.partial_cmp(&current) {
-                    None => return Err(Some(OutOfOrder::NoDefinedComparison { current, last })),
+                    None => return Err(OutOfOrder::NoDefinedComparison { current, last }),
                     Some(Ordering::Less) => {}
                     Some(Ordering::Equal) => {
                         if !ALLOW_DUPLICATES {
-                            return Err(Some(OutOfOrder::Duplicate { current, last }));
+                            return Err(OutOfOrder::Duplicate { current, last });
                         }
                     }
                     Some(Ordering::Greater) => {
-                        return Err(Some(OutOfOrder::Swapped { current, last }));
+                        return Err(OutOfOrder::Swapped { current, last });
                     }
                 }
                 last = current;

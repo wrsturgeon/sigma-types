@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.1.3";
+        version = "0.1.4";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -70,6 +70,17 @@
         dev-dependencies = {
           quickcheck = [ ];
         };
+        features = {
+          malachite = {
+            dependencies = {
+              malachite-base = [ ];
+            };
+            other-features = [ ];
+          };
+        };
+        feature-dependencies = builtins.foldl' (
+          acc: { dependencies, other-features }: acc // dependencies
+        ) { } (builtins.attrValues features);
 
         tomlize =
           set:
@@ -158,6 +169,18 @@
               ) dependencies
             )
           )}
+          ${pkgs.lib.strings.concatLines (
+            builtins.attrValues (
+              builtins.mapAttrs (
+                pkg: features:
+                "${pkg} = { version = \"${
+                  if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
+                }\", default-features = false, features = [ ${
+                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
+                } ], optional = true }"
+              ) feature-dependencies
+            )
+          )}
           [dev-dependencies]
           ${pkgs.lib.strings.concatLines (
             builtins.attrValues (
@@ -169,6 +192,22 @@
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
                 } ] }"
               ) dev-dependencies
+            )
+          )}
+          [features]
+          ${pkgs.lib.strings.concatLines (
+            builtins.attrValues (
+              builtins.mapAttrs (
+                k:
+                { dependencies, other-features }:
+                "${k} = [ ${
+                  pkgs.lib.strings.concatStringsSep ", " (
+                    builtins.map (s: "\"${s}\"") (
+                      other-features ++ builtins.map (s: "dep:${s}") (builtins.attrNames dependencies)
+                    )
+                  )
+                } ]"
+              ) features
             )
           )}
           [lints.rust]

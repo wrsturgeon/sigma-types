@@ -35,13 +35,14 @@ implement type systems that offer _sigma types_ (or $\Sigma$-types),
 which represent a term (say, $A$) alongside another term (say, $B$)
 whose _type_ can depend on the _value_ of $A$.
 Since the type of $B$ can depend on the value of $A$,
-$B$ often represents a proof that some property holds of $A$.
+the type of $B$ often represents a proof that
+some property holds of this particular value for $A$.
 (If exactly how is unclear and you have a few minutes and a mind to be blown,
 see [the Curry-Howard correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence).)
 
-We implement a subset of $\Sigma$-types in which $B$ is decidable
-and reduces to a `Result` whose error type is an `Option`al error message.
-In this case, a $\Sigma$-type can represent a value for which some _computable_ property is checked.
+We implement a subset of $\Sigma$-types in which $B$ represents a decidable proposition,
+and thus, to decide whether a proof exists to inhabit $B$,
+we ask for a function that takes the value of $A$ and returns a Rust `Result`.
 
 ### Why not call this library `invariant` or something more clear?
 

@@ -194,8 +194,11 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Borrow<Raw> for Sigma<Raw, In
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> fmt::Debug for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ", Invariant::ADJECTIVE)?;
-        self.raw.fmt(f)
+        #[cfg(feature = "std")]
+        if std::env::var("DEBUG_SIGMA_TYPES").is_ok_and(|s| s != "0") {
+            write!(f, "({}) ", Invariant::ADJECTIVE)?;
+        }
+        fmt::Debug::fmt(&self.raw, f)
     }
 }
 

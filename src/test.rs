@@ -1,4 +1,7 @@
+#[cfg(not(feature = "std"))]
 extern crate alloc;
+
+#[cfg(not(feature = "std"))]
 extern crate std;
 
 #[cfg(not(feature = "serde"))]
@@ -6,11 +9,16 @@ use serde_json as _;
 
 use {
     crate::{NonNegative, Zero as _},
-    alloc::{format, vec::Vec},
     core::cmp::Ordering,
     quickcheck::TestResult,
     std::panic::catch_unwind,
 };
+
+#[cfg(feature = "std")]
+use std::format;
+
+#[cfg(not(feature = "std"))]
+use alloc::{format, vec::Vec};
 
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 

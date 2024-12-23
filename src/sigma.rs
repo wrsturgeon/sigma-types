@@ -1,9 +1,25 @@
 //! Type that maintains a given invariant.
 
-use core::{fmt, ops};
+use {
+    crate::{Zero, non_negative::NonNegative},
+    core::{fmt, ops},
+};
+
+#[cfg(debug_assertions)]
+use crate::non_negative::NonNegativeInvariant;
 
 #[cfg(not(debug_assertions))]
 use core::marker::PhantomData;
+
+impl<Z: fmt::Debug + PartialOrd + Zero> Zero for NonNegative<Z> {
+    const ZERO: Self = Self {
+        raw: Z::ZERO,
+        #[cfg(debug_assertions)]
+        test: NonNegativeInvariant::new(),
+        #[cfg(not(debug_assertions))]
+        phantom: PhantomData,
+    };
+}
 
 /// Type that maintains a given invariant.
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]

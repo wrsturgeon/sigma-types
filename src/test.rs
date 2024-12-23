@@ -2,11 +2,14 @@ extern crate alloc;
 extern crate std;
 
 use {
+    crate::{NonNegative, Zero as _},
     alloc::{format, vec::Vec},
     core::cmp::Ordering,
     quickcheck::TestResult,
     std::panic::catch_unwind,
 };
+
+const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 
 quickcheck::quickcheck! {
     fn sorted_vec_non_strict(v: Vec<u8>) -> TestResult {

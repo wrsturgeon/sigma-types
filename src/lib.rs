@@ -11,6 +11,7 @@ mod sorted;
 #[cfg(test)]
 mod test;
 
+#[cfg(not(feature = "malachite"))]
 mod zero;
 
 pub use {
@@ -19,5 +20,10 @@ pub use {
     positive::{NonPositive, Positive, PositiveInvariant},
     sigma::Sigma,
     sorted::{OutOfOrder, Sorted, SortedInvariant},
-    zero::Zero,
 };
+
+#[cfg(feature = "malachite")]
+pub use malachite_base::num::basic::traits::Zero;
+
+#[cfg(not(feature = "malachite"))]
+pub use zero::Zero;

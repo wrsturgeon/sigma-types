@@ -29,6 +29,19 @@ pub type NonNegative<Z> = Sigma<Z, NonNegativeInvariant<Z>>;
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonNegativeInvariant<Z: fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
 
+impl<Z: fmt::Debug + PartialOrd + Zero> NonNegativeInvariant<Z> {
+    /// `const` version of `Default::default`.
+    #[inline(always)]
+    #[cfg(debug_assertions)]
+    #[expect(
+        clippy::single_call_fn,
+        reason = "Useful in another file with different visibility"
+    )]
+    pub(crate) const fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
 impl<Z: fmt::Debug + PartialOrd + Zero> Default for NonNegativeInvariant<Z> {
     #[inline(always)]
     fn default() -> Self {

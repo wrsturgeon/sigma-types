@@ -2,6 +2,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod all;
 mod all_pairs;
 mod invariant;
 mod non_negative;
@@ -21,6 +22,7 @@ mod test;
 mod zero;
 
 pub use {
+    all::{All, NotAll},
     all_pairs::{AllPairs, NotAllPairs},
     invariant::Test,
     non_negative::{Negative, NonNegative, NonNegativeInvariant},

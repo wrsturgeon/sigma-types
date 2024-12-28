@@ -1,3 +1,4 @@
+#[cfg(not(feature = "std"))]
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
@@ -16,7 +17,10 @@ use {
 use alloc::vec::Vec;
 
 #[cfg(debug_assertions)]
-use {alloc::format, std::panic::catch_unwind};
+use std::panic::catch_unwind;
+
+#[cfg(all(debug_assertions, not(feature = "std")))]
+use alloc::format;
 
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 

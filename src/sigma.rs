@@ -49,15 +49,15 @@ impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
 
 /// Type that maintains a given invariant.
 #[repr(transparent)]
-#[derive(Copy, Clone, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw>> {
+#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> {
     /// Only to silence compiler errors.
     phantom: PhantomData<Invariant>,
     /// Internal type (to which this type will reduce in release builds).
     raw: Raw,
 }
 
-impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// Without changing its internal value,
     /// view one sigma-typed value as implementing another sigma type
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).
@@ -65,7 +65,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// If the latter invariant does not hold.
     #[inline]
     #[cfg(debug_assertions)]
-    pub fn also<OtherInvariant: crate::Test<Raw>>(&self) -> &Sigma<Raw, OtherInvariant> {
+    pub fn also<OtherInvariant: crate::Test<Raw, 1>>(&self) -> &Sigma<Raw, OtherInvariant> {
         let ptr: *const Self = self;
         // SAFETY:
         // Pointer reinterpretation. See `repr(transparent)` above.
@@ -80,7 +80,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).
     #[inline]
     #[cfg(not(debug_assertions))]
-    pub const fn also<OtherInvariant: crate::Test<Raw>>(&self) -> &Sigma<Raw, OtherInvariant> {
+    pub const fn also<OtherInvariant: crate::Test<Raw, 1>>(&self) -> &Sigma<Raw, OtherInvariant> {
         let ptr: *const Self = self;
         // SAFETY:
         // Pointer reinterpretation. See `repr(transparent)` above.
@@ -160,7 +160,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     #[allow(tail_expr_drop_order, reason = "just for miri")]
     pub fn map<
         OtherRaw: fmt::Debug,
-        OtherInvariant: crate::Test<OtherRaw>,
+        OtherInvariant: crate::Test<OtherRaw, 1>,
         F: FnOnce(Raw) -> OtherRaw,
     >(
         self,
@@ -176,7 +176,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     #[allow(tail_expr_drop_order, reason = "just for miri")]
     pub fn map_ref<
         OtherRaw: fmt::Debug,
-        OtherInvariant: crate::Test<OtherRaw>,
+        OtherInvariant: crate::Test<OtherRaw, 1>,
         F: FnOnce(&Raw) -> OtherRaw,
     >(
         &self,
@@ -227,7 +227,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// # Errors
     /// If the latter invariant does not hold.
     #[inline]
-    pub fn try_also<OtherInvariant: crate::Test<Raw>>(
+    pub fn try_also<OtherInvariant: crate::Test<Raw, 1>>(
         &self,
     ) -> Result<&Sigma<Raw, OtherInvariant>, OtherInvariant::Error<'_>> {
         let ptr: *const Self = self;
@@ -261,21 +261,28 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     }
 }
 
-impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> AsRef<Raw> for Sigma<Raw, Invariant> {
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> AsRef<Raw> for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn as_ref(&self) -> &Raw {
         &self.raw
     }
 }
 
-impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Borrow<Raw> for Sigma<Raw, Invariant> {
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Borrow<Raw> for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn borrow(&self) -> &Raw {
         &self.raw
     }
 }
 
-impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> fmt::Debug for Sigma<Raw, Invariant> {
+impl<Raw: Default + fmt::Debug, Invariant: crate::Test<Raw, 1>> Default for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn default() -> Self {
+        Self::new(Raw::default())
+    }
+}
+
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> fmt::Debug for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[cfg(feature = "std")]
@@ -286,7 +293,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> fmt::Debug for Sigma<Raw, Inv
     }
 }
 
-impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw>> fmt::Display
+impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw, 1>> fmt::Display
     for Sigma<Raw, Invariant>
 {
     #[inline(always)]
@@ -295,7 +302,7 @@ impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw>> fmt::Display
     }
 }
 
-impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> ops::Deref for Sigma<Raw, Invariant> {
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> ops::Deref for Sigma<Raw, Invariant> {
     type Target = Raw;
 
     #[inline(always)]
@@ -306,7 +313,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> ops::Deref for Sigma<Raw, Inv
 
 #[cfg(feature = "serde")]
 #[expect(clippy::missing_trait_methods, reason = "I'm no expert")]
-impl<'de, Raw: fmt::Debug + serde::Deserialize<'de>, Invariant: crate::Test<Raw>>
+impl<'de, Raw: fmt::Debug + serde::Deserialize<'de>, Invariant: crate::Test<Raw, 1>>
     serde::Deserialize<'de> for Sigma<Raw, Invariant>
 {
     #[inline]
@@ -327,7 +334,7 @@ impl<'de, Raw: fmt::Debug + serde::Deserialize<'de>, Invariant: crate::Test<Raw>
 }
 
 #[cfg(feature = "serde")]
-impl<Raw: fmt::Debug + serde::Serialize, Invariant: crate::Test<Raw>> serde::Serialize
+impl<Raw: fmt::Debug + serde::Serialize, Invariant: crate::Test<Raw, 1>> serde::Serialize
     for Sigma<Raw, Invariant>
 {
     #[inline(always)]

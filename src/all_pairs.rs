@@ -12,7 +12,7 @@ where
     Input::Item: fmt::Debug,
     for<'i> &'i Input: IntoIterator<Item = &'i Input::Item>;
 
-impl<Invariant: crate::Test<Input::Item, 2>, Input: IntoIterator + fmt::Debug> crate::Test<Input>
+impl<Invariant: crate::Test<Input::Item, 2>, Input: IntoIterator + fmt::Debug> crate::Test<Input, 1>
     for AllPairs<Invariant, Input>
 where
     Input::Item: fmt::Debug,

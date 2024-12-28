@@ -29,7 +29,7 @@ pub type NonNegative<Input> = Sigma<Input, NonNegativeInvariant<Input>>;
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonNegativeInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
 
-impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input> for NonNegativeInvariant<Input> {
+impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for NonNegativeInvariant<Input> {
     const ADJECTIVE: &str = "non-negative";
     type Error<'i>
         = Negative<'i, Input>

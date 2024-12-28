@@ -29,7 +29,7 @@ pub type Positive<Input> = Sigma<Input, PositiveInvariant<Input>>;
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct PositiveInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
 
-impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input> for PositiveInvariant<Input> {
+impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for PositiveInvariant<Input> {
     const ADJECTIVE: &str = "positive";
     type Error<'i>
         = NonPositive<'i, Input>

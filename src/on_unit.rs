@@ -56,7 +56,7 @@ impl<
     Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
-> Test<Input> for OnUnitInvariant<Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
+> Test<Input, 1> for OnUnitInvariant<Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
 {
     const ADJECTIVE: &str = "on the unit interval";
     type Error<'i>

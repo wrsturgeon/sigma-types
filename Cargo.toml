@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.1.11"
+version = "0.2.0"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -15,7 +15,7 @@ categories = [ "data-structures", "development-tools", "mathematics", "no-std", 
 [dependencies]
 
 malachite-base = { version = "=0.4.16", default-features = false, features = [  ], optional = true }
-serde = { version = "=1.0.216", default-features = false, features = [  ], optional = true }
+serde = { version = "=1.0.217", default-features = false, features = [  ], optional = true }
 
 [dev-dependencies]
 quickcheck = { version = "=1.0.3", default-features = false, features = [  ] }
@@ -257,6 +257,7 @@ arbitrary-source-item-ordering = "deny"
 arc-with-non-send-sync = "deny"
 arithmetic-side-effects = "deny"
 as-conversions = "deny"
+as-pointer-underscore = "deny"
 as-ptr-cast-mut = "deny"
 as-underscore = "deny"
 assertions-on-constants = "deny"
@@ -356,6 +357,7 @@ doc-include-without-cfg = "deny"
 doc-lazy-continuation = "deny"
 doc-link-with-quotes = "deny"
 doc-markdown = "deny"
+doc-nested-refdefs = "deny"
 double-comparisons = "deny"
 double-must-use = "deny"
 double-neg = "deny"
@@ -527,6 +529,7 @@ lines-filter-map-ok = "deny"
 linkedlist = "deny"
 lint-groups-priority = "deny"
 lint-pass-impl-without-macro = "deny"
+literal-string-with-formatting-args = "deny"
 little-endian-bytes = "deny"
 lossy-float-literal = "deny"
 macro-metavars-in-unsafe = "deny"
@@ -791,6 +794,7 @@ regex-creation-in-loops = "deny"
 renamed-function-params = "deny"
 repeat-once = "deny"
 repeat-vec-with-capacity = "deny"
+repr-packed-without-abi = "deny"
 reserve-after-initialization = "deny"
 rest-pat-in-fully-bound-structs = "deny"
 result-filter-map = "deny"

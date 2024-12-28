@@ -9,16 +9,17 @@ use {
 /// Term expected to be on the unit interval (between 0 and 1) was not.
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NotOnUnit<
-    U: Clone + One + PartialOrd + Zero + fmt::Debug,
+    'i,
+    Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
->(U);
+>(&'i Input);
 
 impl<
-    U: Clone + One + PartialOrd + Zero + fmt::Debug,
+    Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
-> fmt::Display for NotOnUnit<U, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
+> fmt::Display for NotOnUnit<'_, Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
 {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -27,7 +28,7 @@ impl<
             reason = "Intentional and informative, not just forgotten print-debugging"
         )]
 
-        let Self(ref u) = *self;
+        let Self(u) = *self;
         write!(
             f,
             "Not on {}0, 1{}: {u:#?}",
@@ -39,43 +40,46 @@ impl<
 
 /// Terms on the unit interval (between 0 and 1),
 /// either inclusive or exclusive at each extreme.
-pub type OnUnit<U, const INCLUSIVE_AT_ZERO: bool, const INCLUSIVE_AT_ONE: bool> =
-    Sigma<U, OnUnitInvariant<U, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>>;
+pub type OnUnit<Input, const INCLUSIVE_AT_ZERO: bool, const INCLUSIVE_AT_ONE: bool> =
+    Sigma<Input, OnUnitInvariant<Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>>;
 
 /// Terms on the unit interval (between 0 and 1),
 /// either inclusive or exclusive at each extreme.
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OnUnitInvariant<
-    U: Clone + One + PartialOrd + Zero + fmt::Debug,
+    Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
->(PhantomData<U>);
+>(PhantomData<Input>);
 
 impl<
-    U: Clone + One + PartialOrd + Zero + fmt::Debug,
+    Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,
     const INCLUSIVE_AT_ONE: bool,
-> Test<U> for OnUnitInvariant<U, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
+> Test<Input> for OnUnitInvariant<Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
 {
     const ADJECTIVE: &str = "on the unit interval";
-    type Error = NotOnUnit<U, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>;
+    type Error<'i>
+        = NotOnUnit<'i, Input, INCLUSIVE_AT_ZERO, INCLUSIVE_AT_ONE>
+    where
+        Input: 'i;
 
     #[inline]
-    fn test(input: &U) -> Result<(), Self::Error> {
-        match input.partial_cmp(&U::ZERO) {
-            None | Some(Ordering::Less) => return Err(NotOnUnit(input.clone())),
+    fn test([input]: [&Input; 1]) -> Result<(), Self::Error<'_>> {
+        match input.partial_cmp(&Input::ZERO) {
+            None | Some(Ordering::Less) => return Err(NotOnUnit(input)),
             Some(Ordering::Equal) => {
                 if !INCLUSIVE_AT_ZERO {
-                    return Err(NotOnUnit(input.clone()));
+                    return Err(NotOnUnit(input));
                 }
             }
             Some(Ordering::Greater) => {}
         }
-        match input.partial_cmp(&U::ONE) {
-            None | Some(Ordering::Greater) => return Err(NotOnUnit(input.clone())),
+        match input.partial_cmp(&Input::ONE) {
+            None | Some(Ordering::Greater) => return Err(NotOnUnit(input)),
             Some(Ordering::Equal) => {
                 if !INCLUSIVE_AT_ONE {
-                    return Err(NotOnUnit(input.clone()));
+                    return Err(NotOnUnit(input));
                 }
             }
             Some(Ordering::Less) => {}

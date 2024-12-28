@@ -8,21 +8,21 @@ use {
 #[cfg(feature = "std")]
 use std::env;
 
-impl<T: Clone + One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
+impl<T: One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
     const ONE: Self = Self {
         phantom: PhantomData,
         raw: T::ONE,
     };
 }
 
-impl<Z: Clone + PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
+impl<Z: PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
     const ZERO: Self = Self {
         phantom: PhantomData,
         raw: Z::ZERO,
     };
 }
 
-impl<T: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: bool> One
+impl<T: One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: bool> One
     for OnUnit<T, INCLUSIVE_AT_ZERO, true>
 {
     const ONE: Self = Self {
@@ -31,7 +31,7 @@ impl<T: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: b
     };
 }
 
-impl<Z: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ONE: bool> Zero
+impl<Z: One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ONE: bool> Zero
     for OnUnit<Z, true, INCLUSIVE_AT_ONE>
 {
     const ZERO: Self = Self {
@@ -40,7 +40,7 @@ impl<Z: Clone + One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ONE: bo
     };
 }
 
-impl<T: Clone + One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
+impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
     const ONE: Self = Self {
         phantom: PhantomData,
         raw: T::ONE,
@@ -98,7 +98,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
             clippy::panic,
             reason = "Returning a result would break API in release builds"
         )]
-        match Invariant::test(&self.raw) {
+        match Invariant::test([&self.raw]) {
             Ok(()) => {}
             Err(message) => {
                 panic!("{:#?} is not {}: {message}", self.raw, Invariant::ADJECTIVE);
@@ -229,7 +229,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     #[inline]
     pub fn try_also<OtherInvariant: crate::Test<Raw>>(
         &self,
-    ) -> Result<&Sigma<Raw, OtherInvariant>, OtherInvariant::Error> {
+    ) -> Result<&Sigma<Raw, OtherInvariant>, OtherInvariant::Error<'_>> {
         let ptr: *const Self = self;
         // SAFETY:
         // Pointer reinterpretation. See `repr(transparent)` above.
@@ -243,21 +243,21 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw>> Sigma<Raw, Invariant> {
     /// # Errors
     /// If the invariant does not hold.
     #[inline(always)]
-    pub fn try_check(&self) -> Result<(), Invariant::Error> {
-        Invariant::test(&self.raw)
+    pub fn try_check(&self) -> Result<(), Invariant::Error<'_>> {
+        Invariant::test([&self.raw])
     }
 
     /// Create a new sigma type instance by checking an invariant.
     /// # Errors
     /// If the invariant does not hold.
     #[inline]
-    pub fn try_new(raw: Raw) -> Result<Self, Invariant::Error> {
+    pub fn try_new(raw: Raw) -> Option<Self> {
         let provisional = Self {
             phantom: PhantomData,
             raw,
         };
-        provisional.try_check()?;
-        Ok(provisional)
+        provisional.try_check().ok()?;
+        Some(provisional)
     }
 }
 

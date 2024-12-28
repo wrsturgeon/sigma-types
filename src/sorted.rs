@@ -1,6 +1,9 @@
 //! Iterable data structure guaranteed to be sorted (optionally with or without duplicates).
 
-use core::{cmp::Ordering, fmt, marker::PhantomData};
+use {
+    crate::AllPairs,
+    core::{cmp::Ordering, fmt},
+};
 
 /// Some elements in a supposedly sorted iterator were not sorted.
 #[expect(
@@ -8,141 +11,83 @@ use core::{cmp::Ordering, fmt, marker::PhantomData};
     reason = "Partial comparison is, in fact, an exhaustive relation"
 )]
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum OutOfOrder<T: fmt::Debug> {
+pub enum OutOfOrder {
     /// Two adjacent elements compared as equal (iff this was explicitly disallowed).
-    Duplicate {
-        /// Element that compared equal to the one before it.
-        current: T,
-        /// Element that compared equal to the one after it.
-        last: T,
-    },
+    Duplicate,
     /// Two adjacent elements could not be compared.
-    NoDefinedComparison {
-        /// Element that did not compared to the one before it.
-        current: T,
-        /// Element that did not compared to the one after it.
-        last: T,
-    },
+    NoDefinedComparison,
     /// Two adjacent elements compared in decreasing order.
-    Swapped {
-        /// Element that compared less than the one before it.
-        current: T,
-        /// Element that compared greater than the one after it.
-        last: T,
-    },
+    Reversed,
 }
 
-impl<T: fmt::Debug> fmt::Display for OutOfOrder<T> {
+impl fmt::Display for OutOfOrder {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[expect(
-            clippy::use_debug,
-            reason = "Intentional and informative, not just forgotten print-debugging"
-        )]
         match *self {
-            Self::Duplicate {
-                ref current,
-                ref last,
-            } => {
+            Self::Duplicate => {
                 writeln!(
                     f,
-                    "Duplicate element (not allowed since `ALLOW_DUPLICATES = false`):",
-                )?;
-                writeln!(f)?;
-                writeln!(f, "current element:")?;
-                writeln!(f, "{current:#?}")?;
-                writeln!(f)?;
-                writeln!(f, "last element:")?;
-                writeln!(f, "{last:#?}")
+                    "duplicate element (not allowed since `ALLOW_DUPLICATES = false`)",
+                )
             }
-            Self::NoDefinedComparison {
-                ref current,
-                ref last,
-            } => {
-                writeln!(f, "No defined comparison:")?;
-                writeln!(f)?;
-                writeln!(f, "current element:")?;
-                writeln!(f, "{current:#?}")?;
-                writeln!(f)?;
-                writeln!(f, "last element:")?;
-                writeln!(f, "{last:#?}")
-            }
-            Self::Swapped {
-                ref current,
-                ref last,
-            } => {
-                writeln!(f, "Out of order:")?;
-                writeln!(f)?;
-                writeln!(f, "current element:")?;
-                writeln!(f, "{current:#?}")?;
-                writeln!(f)?;
-                writeln!(f, "last element:")?;
-                writeln!(f, "{last:#?}")
-            }
+            Self::NoDefinedComparison => writeln!(f, "no defined comparison"),
+            Self::Reversed => writeln!(f, "reversed"),
         }
     }
 }
 
 /// Iterable data structure guaranteed to be sorted (optionally with or without duplicates).
-pub type Sorted<Iter, const ALLOW_DUPLICATES: bool> =
-    crate::Sigma<Iter, SortedInvariant<Iter, ALLOW_DUPLICATES>>;
+pub type Sorted<Input, const ALLOW_DUPLICATES: bool> =
+    crate::Sigma<Input, SortedInvariant<Input, ALLOW_DUPLICATES>>;
 
-impl<
-    Iter: IntoIterator + fmt::Debug,
-    const ALLOW_DUPLICATES: bool,
-    Item: Clone + PartialOrd + fmt::Debug,
-> IntoIterator for Sorted<Iter, ALLOW_DUPLICATES>
+impl<Input: IntoIterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
+    for Sorted<Input, ALLOW_DUPLICATES>
 where
-    for<'i> &'i Iter: IntoIterator<Item = &'i Item>,
+    Input::Item: PartialOrd + fmt::Debug,
+    for<'i> &'i Input: IntoIterator<Item = &'i Input::Item>,
 {
-    type IntoIter = <Iter as IntoIterator>::IntoIter;
-    type Item = <Iter as IntoIterator>::Item;
+    type IntoIter = <Input as IntoIterator>::IntoIter;
+    type Item = <Input as IntoIterator>::Item;
 
     #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {
-        let iter: Iter = self.get();
-        <Iter as IntoIterator>::into_iter(iter)
+        let iter: Input = self.get();
+        <Input as IntoIterator>::into_iter(iter)
     }
 }
 
-/// Ensure that an iterable data structure is sorted (optionally with or without duplicates).
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct SortedInvariant<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool>(PhantomData<Iter>)
-where
-    for<'i> &'i Iter: IntoIterator,
-    for<'i> <&'i Iter as IntoIterator>::Item: fmt::Debug + PartialOrd;
+/// Iterable data structure guaranteed to be sorted (optionally with or without duplicates).
+pub type SortedInvariant<Input, const ALLOW_DUPLICATES: bool> =
+    AllPairs<SortedPair<ALLOW_DUPLICATES>, Input>;
 
-impl<Iter: fmt::Debug, const ALLOW_DUPLICATES: bool, Item: Clone + PartialOrd + fmt::Debug>
-    crate::Test<Iter> for SortedInvariant<Iter, ALLOW_DUPLICATES>
-where
-    for<'i> &'i Iter: IntoIterator<Item = &'i Item>,
+/// Pair guaranteed to be sorted left-to-right (optionally permitted to be equal).
+#[expect(clippy::exhaustive_structs, reason = "are you fucking kidding me")]
+#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SortedPair<const ALLOW_DUPLICATES: bool>;
+
+impl<const ALLOW_DUPLICATES: bool, Input: PartialOrd> crate::Test<Input, 2>
+    for SortedPair<ALLOW_DUPLICATES>
 {
     const ADJECTIVE: &str = "sorted";
 
-    type Error = OutOfOrder<Item>;
+    type Error<'i>
+        = OutOfOrder
+    where
+        Input: 'i;
 
     #[inline]
-    fn test(input: &Iter) -> Result<(), Self::Error> {
-        let mut iter = input.into_iter();
-        if let Some(last_ref) = iter.next() {
-            let mut last = last_ref.clone();
-            for current_ref in iter {
-                let current = current_ref.clone();
-                match last.partial_cmp(&current) {
-                    None => return Err(OutOfOrder::NoDefinedComparison { current, last }),
-                    Some(Ordering::Less) => {}
-                    Some(Ordering::Equal) => {
-                        if !ALLOW_DUPLICATES {
-                            return Err(OutOfOrder::Duplicate { current, last });
-                        }
-                    }
-                    Some(Ordering::Greater) => {
-                        return Err(OutOfOrder::Swapped { current, last });
-                    }
+    fn test([fst, snd]: [&Input; 2]) -> Result<(), Self::Error<'_>> {
+        match fst.partial_cmp(snd) {
+            None => Err(OutOfOrder::NoDefinedComparison),
+            Some(Ordering::Less) => Ok(()),
+            Some(Ordering::Equal) => {
+                if ALLOW_DUPLICATES {
+                    Ok(())
+                } else {
+                    Err(OutOfOrder::Duplicate)
                 }
-                last = current;
             }
+            Some(Ordering::Greater) => Err(OutOfOrder::Reversed),
         }
-        Ok(())
     }
 }

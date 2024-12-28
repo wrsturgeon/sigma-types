@@ -7,9 +7,9 @@ use {
 
 /// A term expected to be positive was not.
 #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NonPositive<Z: Clone + fmt::Debug + PartialOrd + Zero>(Z);
+pub struct NonPositive<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
 
-impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<Z> {
+impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Input> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #![expect(
@@ -17,28 +17,31 @@ impl<Z: Clone + fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<Z> 
             reason = "Intentional and informative, not just forgotten print-debugging"
         )]
 
-        let Self(ref z) = *self;
-        write!(f, "{z:#?} <= {:#?}", Z::ZERO)
+        let Self(z) = *self;
+        write!(f, "{z:#?} <= {:#?}", Input::ZERO)
     }
 }
 
 /// Positive terms (defined by comparison to zero).
-pub type Positive<Z> = Sigma<Z, PositiveInvariant<Z>>;
+pub type Positive<Input> = Sigma<Input, PositiveInvariant<Input>>;
 
 /// Positive terms (defined by comparison to zero).
 #[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct PositiveInvariant<Z: Clone + fmt::Debug + PartialOrd + Zero>(PhantomData<Z>);
+pub struct PositiveInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
 
-impl<Z: Clone + fmt::Debug + PartialOrd + Zero> Test<Z> for PositiveInvariant<Z> {
+impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input> for PositiveInvariant<Input> {
     const ADJECTIVE: &str = "positive";
-    type Error = NonPositive<Z>;
+    type Error<'i>
+        = NonPositive<'i, Input>
+    where
+        Input: 'i;
 
     #[inline(always)]
-    fn test(input: &Z) -> Result<(), Self::Error> {
-        if *input > Z::ZERO {
+    fn test([input]: [&Input; 1]) -> Result<(), Self::Error<'_>> {
+        if *input > Input::ZERO {
             Ok(())
         } else {
-            Err(NonPositive(input.clone()))
+            Err(NonPositive(input))
         }
     }
 }

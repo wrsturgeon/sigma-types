@@ -8,7 +8,6 @@ use serde_json as _;
 
 use {
     crate::{NonNegative, Zero as _},
-    alloc::format,
     core::cmp::Ordering,
     quickcheck::TestResult,
 };
@@ -17,7 +16,7 @@ use {
 use alloc::vec::Vec;
 
 #[cfg(debug_assertions)]
-use std::panic::catch_unwind;
+use {alloc::format, std::panic::catch_unwind};
 
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 
@@ -125,12 +124,19 @@ quickcheck::quickcheck! {
     fn try_sorted_vec_strict(v: Vec<u8>) -> TestResult {
         type Sorted = crate::Sorted<Vec<u8>, false>;
         let actually_sorted = v.is_sorted_by(|a,b| matches!(a.cmp(b), Ordering::Less));
-        match Sorted::try_new(v) {
-            Ok(ok) => {
+        Sorted::try_new(v).map_or_else(
+            || {
+                if actually_sorted {
+                    TestResult::error("sorted but failed")
+                } else {
+                    TestResult::passed()
+                }
+            },
+            |some| {
                 if actually_sorted {
                     // Testing `Deref` method syntax:
-                    if ok.is_sorted() {
-                        for _ in ok {}
+                    if some.is_sorted() {
+                        for _ in some {}
                         TestResult::passed()
                     } else {
                         TestResult::error("sigma type not sorted")
@@ -138,15 +144,8 @@ quickcheck::quickcheck! {
                 } else {
                     TestResult::error("not sorted but passed")
                 }
-            }
-            Err(e) => {
-                if actually_sorted {
-                    TestResult::error(format!("sorted but failed: {e:#?}"))
-                } else {
-                    TestResult::passed()
-                }
-            }
-        }
+            },
+        )
     }
 
     #[cfg(debug_assertions)]
@@ -197,7 +196,7 @@ quickcheck::quickcheck! {
     fn positive_also_non_negative(i: i64) -> () {
         type Positive = crate::Positive<i64>;
         type NonNegative = crate::NonNegative<i64>;
-        let Ok(positive) = Positive::try_new(i) else {
+        let Some(positive) = Positive::try_new(i) else {
             return;
         };
         let _: &NonNegative = positive.also();
@@ -207,7 +206,7 @@ quickcheck::quickcheck! {
     fn non_negative_try_also_positive(i: i64) -> TestResult {
         type NonNegative = crate::NonNegative<i64>;
         type Positive = crate::Positive<i64>;
-        let Ok(non_negative) = NonNegative::try_new(i) else {
+        let Some(non_negative) = NonNegative::try_new(i) else {
             return TestResult::discard();
         };
         let maybe_also: Result<&Positive, _> = non_negative.try_also();

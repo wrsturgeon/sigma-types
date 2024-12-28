@@ -1,4 +1,5 @@
 # $\Sigma$-Types in Rust
+### Types automatically checked for invariants in debug builds only.
 
 This crate lets you explicitly represent structures like _sorted vectors_ as types of their own.
 

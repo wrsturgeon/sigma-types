@@ -6,7 +6,7 @@ use {
 };
 
 /// A term expected to be non-negative was, in fact, negative.
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Negative<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
 
 impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<'_, Input> {
@@ -26,7 +26,7 @@ impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for Negative<'_, Input>
 pub type NonNegative<Input> = Sigma<Input, NonNegativeInvariant<Input>>;
 
 /// Non-negative terms (defined by comparison to zero).
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonNegativeInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
 
 impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for NonNegativeInvariant<Input> {

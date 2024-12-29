@@ -2,11 +2,24 @@
 
 use {
     crate::{NonNegative, OnUnit, One, Positive, Zero},
-    core::{borrow::Borrow, fmt, marker::PhantomData, ops},
+    core::{
+        borrow::Borrow,
+        cmp::Ordering,
+        fmt,
+        hash::{Hash, Hasher},
+        marker::PhantomData,
+        ops,
+    },
 };
 
 #[cfg(feature = "std")]
 use std::env;
+
+#[cfg(feature = "quickcheck")]
+use quickcheck::{Arbitrary, Gen};
+
+#[cfg(all(feature = "quickcheck", not(feature = "std")))]
+use alloc::boxed::Box;
 
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
     const ONE: Self = Self {
@@ -49,7 +62,6 @@ impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
 
 /// Type that maintains a given invariant.
 #[repr(transparent)]
-#[derive(Copy, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> {
     /// Only to silence compiler errors.
     phantom: PhantomData<Invariant>,
@@ -261,6 +273,29 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     }
 }
 
+#[cfg(feature = "quickcheck")]
+impl<Raw: Arbitrary + fmt::Debug, Invariant: 'static + crate::Test<Raw, 1>> Arbitrary
+    for Sigma<Raw, Invariant>
+{
+    #[inline]
+    fn arbitrary(g: &mut Gen) -> Self {
+        loop {
+            if let Some(sigma) = Self::try_new(Arbitrary::arbitrary(g)) {
+                return sigma;
+            }
+        }
+    }
+
+    #[inline]
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        let Self {
+            phantom: PhantomData,
+            ref raw,
+        } = *self;
+        Box::new(raw.shrink().filter_map(Self::try_new))
+    }
+}
+
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> AsRef<Raw> for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn as_ref(&self) -> &Raw {
@@ -275,10 +310,119 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Borrow<Raw> for Sigma<Raw,
     }
 }
 
+impl<Raw: Clone + fmt::Debug, Invariant: crate::Test<Raw, 1>> Clone for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn clone(&self) -> Self {
+        Self::new(self.raw.clone())
+    }
+
+    #[inline(always)]
+    fn clone_from(&mut self, source: &Self) {
+        self.raw.clone_from(&source.raw);
+        self.check();
+    }
+}
+
+impl<Raw: Copy + fmt::Debug, Invariant: crate::Test<Raw, 1>> Copy for Sigma<Raw, Invariant> {}
+
 impl<Raw: Default + fmt::Debug, Invariant: crate::Test<Raw, 1>> Default for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn default() -> Self {
         Self::new(Raw::default())
+    }
+}
+
+impl<Raw: Eq + fmt::Debug, Invariant: crate::Test<Raw, 1>> Eq for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn assert_receiver_is_total_eq(&self) {
+        self.raw.assert_receiver_is_total_eq();
+    }
+}
+
+impl<Raw: Hash + fmt::Debug, Invariant: crate::Test<Raw, 1>> Hash for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.raw.hash(state);
+    }
+
+    #[inline(always)]
+    fn hash_slice<H: Hasher>(data: &[Self], state: &mut H) {
+        let ptr: *const [Self] = data;
+        #[expect(clippy::as_conversions, reason = "marked `repr(transparent)` above")]
+        let transparent = ptr as *const [Raw];
+        // SAFETY:
+        // Marked `repr(transparent)` above
+        let reinterpreted: &[Raw] = unsafe { &*transparent };
+        Raw::hash_slice(reinterpreted, state);
+    }
+}
+
+impl<Raw: Ord + fmt::Debug, Invariant: crate::Test<Raw, 1>> Ord for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn clamp(self, min: Self, max: Self) -> Self {
+        Self::new(self.raw.clamp(min.raw, max.raw))
+    }
+
+    #[inline(always)]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.raw.cmp(&other.raw)
+    }
+
+    #[inline(always)]
+    fn max(self, other: Self) -> Self {
+        Self::new(self.raw.max(other.raw))
+    }
+
+    #[inline(always)]
+    fn min(self, other: Self) -> Self {
+        Self::new(self.raw.min(other.raw))
+    }
+}
+
+impl<Raw: PartialEq + fmt::Debug, Invariant: crate::Test<Raw, 1>> PartialEq
+    for Sigma<Raw, Invariant>
+{
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        self.raw.eq(&other.raw)
+    }
+
+    #[inline(always)]
+    #[expect(
+        clippy::partialeq_ne_impl,
+        reason = "arbitrary choice between competing lints"
+    )]
+    fn ne(&self, other: &Self) -> bool {
+        self.raw.ne(&other.raw)
+    }
+}
+
+impl<Raw: PartialOrd + fmt::Debug, Invariant: crate::Test<Raw, 1>> PartialOrd
+    for Sigma<Raw, Invariant>
+{
+    #[inline(always)]
+    fn ge(&self, other: &Self) -> bool {
+        self.raw.ge(&other.raw)
+    }
+
+    #[inline(always)]
+    fn gt(&self, other: &Self) -> bool {
+        self.raw.gt(&other.raw)
+    }
+
+    #[inline(always)]
+    fn le(&self, other: &Self) -> bool {
+        self.raw.le(&other.raw)
+    }
+
+    #[inline(always)]
+    fn lt(&self, other: &Self) -> bool {
+        self.raw.lt(&other.raw)
+    }
+
+    #[inline(always)]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.raw.partial_cmp(&other.raw)
     }
 }
 

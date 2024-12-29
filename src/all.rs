@@ -3,7 +3,7 @@
 use core::{fmt, marker::PhantomData};
 
 /// Iterable data structure in which each element satisfies a given invariant.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct All<Invariant: crate::Test<Input::Item, 1>, Input: IntoIterator + fmt::Debug>(
     PhantomData<Invariant>,
     PhantomData<Input>,
@@ -45,7 +45,7 @@ where
 
 /// At least one element in an iterator did not satisfy the given invariant.
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NotAll<'i, Item: fmt::Debug, Invariant: crate::Test<Item, 1>> {
     /// Invalid element in the iterator.
     element: &'i Item,

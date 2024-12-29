@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.1";
+        version = "0.2.2";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -75,6 +75,12 @@
           malachite = {
             dependencies = {
               malachite-base = [ ];
+            };
+            other-features = [ ];
+          };
+          quickcheck = {
+            dependencies = {
+              quickcheck = [ ];
             };
             other-features = [ ];
           };
@@ -267,15 +273,11 @@
 
               miri = ''
                 export QUICKCHECK_TESTS=10
-                cargo miri test
-                cargo miri test --release
                 cargo miri test --all-features
                 cargo miri test --all-features --release
               '';
 
               test = ''
-                cargo test
-                cargo test --release
                 cargo test --all-features
                 cargo test --all-features --release
               '';
@@ -295,12 +297,40 @@
                 ${pkgs.ripgrep}/bin/rg 'let &' --iglob='!flake\.nix'
                 if [ "$?" -eq 0 ]
                 then
+                  echo 'Found `let &`. Exiting as an error.'
                   exit 1
                 fi
-                set -e
+                set -ex
 
-                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always
-                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --release
+                # No features:
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features --release
+                ${
+                  if features ? std then
+                    ''
+                      # No features except the standard library:
+                      ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features --features=std
+                      ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features --features=std --release
+                    ''
+                  else
+                    ""
+                }
+                # All features that don't use the standard library:
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features --features=${
+                  builtins.concatStringsSep "," (
+                    builtins.filter (f: f != "std" && !(builtins.any (f: f == "std") features.${f}.other-features)) (
+                      builtins.attrNames features
+                    )
+                  )
+                }
+                ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --no-default-features --features=${
+                  builtins.concatStringsSep "," (
+                    builtins.filter (f: f != "std" && !(builtins.any (f: f == "std") features.${f}.other-features)) (
+                      builtins.attrNames features
+                    )
+                  )
+                } --release
+                # All features, including those that might use the standard library:
                 ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --all-features
                 ${full-toolchain}/bin/cargo-clippy -- --all-targets --color=always --all-features --release
               '';

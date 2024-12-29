@@ -10,7 +10,7 @@ use {
     clippy::exhaustive_enums,
     reason = "Partial comparison is, in fact, an exhaustive relation"
 )]
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum OutOfOrder {
     /// Two adjacent elements compared as equal (iff this was explicitly disallowed).
     Duplicate,
@@ -62,7 +62,7 @@ pub type SortedInvariant<Input, const ALLOW_DUPLICATES: bool> =
 
 /// Pair guaranteed to be sorted left-to-right (optionally permitted to be equal).
 #[expect(clippy::exhaustive_structs, reason = "are you fucking kidding me")]
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SortedPair<const ALLOW_DUPLICATES: bool>;
 
 impl<const ALLOW_DUPLICATES: bool, Input: PartialOrd> crate::Test<Input, 2>

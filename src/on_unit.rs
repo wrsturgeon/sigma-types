@@ -7,7 +7,7 @@ use {
 };
 
 /// Term expected to be on the unit interval (between 0 and 1) was not.
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NotOnUnit<
     'i,
     Input: One + PartialOrd + Zero + fmt::Debug,
@@ -45,7 +45,7 @@ pub type OnUnit<Input, const INCLUSIVE_AT_ZERO: bool, const INCLUSIVE_AT_ONE: bo
 
 /// Terms on the unit interval (between 0 and 1),
 /// either inclusive or exclusive at each extreme.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct OnUnitInvariant<
     Input: One + PartialOrd + Zero + fmt::Debug,
     const INCLUSIVE_AT_ZERO: bool,

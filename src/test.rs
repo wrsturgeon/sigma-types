@@ -1,3 +1,8 @@
+#![allow(
+    clippy::allow_attributes,
+    reason = "`alloc::format` only warns on some feature combinations"
+)]
+
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
@@ -16,11 +21,12 @@ use {
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+#[cfg(not(feature = "std"))]
+#[allow(unused_imports, reason = "complicated namespace resolution")]
+use alloc::format;
+
 #[cfg(debug_assertions)]
 use std::panic::catch_unwind;
-
-#[cfg(all(debug_assertions, not(feature = "std")))]
-use alloc::format;
 
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 

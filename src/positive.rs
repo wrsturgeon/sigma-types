@@ -6,7 +6,7 @@ use {
 };
 
 /// A term expected to be positive was not.
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonPositive<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
 
 impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Input> {
@@ -26,7 +26,7 @@ impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Inp
 pub type Positive<Input> = Sigma<Input, PositiveInvariant<Input>>;
 
 /// Positive terms (defined by comparison to zero).
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct PositiveInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
 
 impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for PositiveInvariant<Input> {

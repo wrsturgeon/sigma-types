@@ -4,6 +4,10 @@
 
 mod all;
 mod all_pairs;
+
+#[cfg(all(not(feature = "std"), feature = "quickcheck"))]
+extern crate alloc;
+
 mod invariant;
 mod non_negative;
 mod on_unit;

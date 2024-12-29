@@ -3,7 +3,7 @@
 use core::{fmt, marker::PhantomData};
 
 /// Iterable data structure in which each adjacent pair of elements satisfies a given invariant.
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AllPairs<Invariant: crate::Test<Input::Item, 2>, Input: IntoIterator + fmt::Debug>(
     PhantomData<Invariant>,
     PhantomData<Input>,
@@ -61,7 +61,7 @@ where
 
 /// At least one pair in an iterator did not satisfy the given invariant.
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NotAllPairs<'i, Item: fmt::Debug, Invariant: crate::Test<Item, 2>> {
     /// First element of the pair.
     elem_fst: &'i Item,

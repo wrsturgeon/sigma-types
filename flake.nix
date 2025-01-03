@@ -150,6 +150,7 @@
           semicolon-outside-block = "allow";
           separated-literal-suffix = "allow";
           single-char-lifetime-names = "allow";
+          tail-expr-drop-order = "warn";
           unknown-lints = "allow";
           unneeded-field-pattern = "allow";
           unqualified-local-imports = null;

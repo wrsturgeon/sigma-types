@@ -271,6 +271,14 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
         provisional.try_check().ok()?;
         Some(provisional)
     }
+
+    /// Wrap a reference through pointer reinterpretation magic.
+    #[inline(always)]
+    pub fn wrap<'r>(reference: &'r Raw) -> &'r Self {
+        let wrapped = unsafe { core::mem::transmute::<&'r Raw, &'r Self>(reference) };
+        wrapped.check();
+        wrapped
+    }
 }
 
 #[cfg(feature = "quickcheck")]

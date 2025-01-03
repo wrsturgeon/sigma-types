@@ -203,6 +203,28 @@ quickcheck::quickcheck! {
     }
 
     #[cfg(debug_assertions)]
+    fn i64_positive_wrap(i: i64) -> TestResult {
+        type Positive = crate::Positive<i64>;
+        let actually_positive = i > 0;
+        match catch_unwind(|| Positive::wrap(&i)) {
+            Ok(..) => {
+                if actually_positive {
+                    TestResult::passed()
+                } else {
+                    TestResult::error("non-positive but passed")
+                }
+            }
+            Err(e) => {
+                if actually_positive {
+                    TestResult::error(format!("positive but failed: {e:#?}"))
+                } else {
+                    TestResult::passed()
+                }
+            }
+        }
+    }
+
+    #[cfg(debug_assertions)]
     fn positive_also_non_negative(i: i64) -> () {
         type Positive = crate::Positive<i64>;
         type NonNegative = crate::NonNegative<i64>;

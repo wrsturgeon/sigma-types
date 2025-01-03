@@ -274,8 +274,36 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
 
     /// Wrap a reference through pointer reinterpretation magic.
     #[inline(always)]
-    pub fn wrap<'r>(reference: &'r Raw) -> &'r Self {
-        let wrapped = unsafe { core::mem::transmute::<&'r Raw, &'r Self>(reference) };
+    #[cfg(debug_assertions)]
+    pub fn wrap(reference: &Raw) -> &Self {
+        let raw_pointer: *const _ = reference;
+        let sigma_pointer = raw_pointer.cast::<Self>();
+        // SAFETY:
+        // `repr(transparent)`
+        let wrapped = unsafe { &*sigma_pointer };
+        wrapped.check();
+        wrapped
+    }
+
+    /// Wrap a reference through pointer reinterpretation magic.
+    #[inline(always)]
+    #[cfg(not(debug_assertions))]
+    pub const fn wrap(reference: &Raw) -> &Self {
+        let raw_pointer: *const _ = reference;
+        let sigma_pointer = raw_pointer.cast::<Self>();
+        // SAFETY:
+        // `repr(transparent)`
+        unsafe { &*sigma_pointer }
+    }
+
+    /// Wrap a reference through pointer reinterpretation magic.
+    #[inline(always)]
+    pub fn wrap_mut(reference: &mut Raw) -> &mut Self {
+        let raw_pointer: *mut _ = reference;
+        let sigma_pointer = raw_pointer.cast::<Self>();
+        // SAFETY:
+        // `repr(transparent)`
+        let wrapped = unsafe { &mut *sigma_pointer };
         wrapped.check();
         wrapped
     }

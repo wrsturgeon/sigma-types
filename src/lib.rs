@@ -9,7 +9,9 @@ mod all_pairs;
 extern crate alloc;
 
 mod invariant;
+mod negative;
 mod non_negative;
+mod non_positive;
 mod on_unit;
 
 #[cfg(not(feature = "malachite"))]
@@ -29,9 +31,11 @@ pub use {
     all::{All, NotAll},
     all_pairs::{AllPairs, NotAllPairs},
     invariant::Test,
-    non_negative::{Negative, NonNegative, NonNegativeInvariant},
+    negative::{Negative, NegativeInvariant, NotNegative},
+    non_negative::{NonNegative, NonNegativeInvariant, NotNonNegative},
+    non_positive::{NonPositive, NonPositiveInvariant, NotNonPositive},
     on_unit::{NotOnUnit, OnUnit, OnUnitInvariant},
-    positive::{NonPositive, Positive, PositiveInvariant},
+    positive::{NotPositive, Positive, PositiveInvariant},
     sigma::Sigma,
     sorted::{OutOfOrder, Sorted, SortedInvariant, SortedPair},
 };

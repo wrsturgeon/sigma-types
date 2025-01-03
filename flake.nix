@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.2";
+        version = "0.2.3";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -62,7 +62,7 @@
         ENV = {
           # environment variables:
           MIRIFLAGS = "-Zmiri-disable-isolation";
-          RUST_BACKTRACE = "full";
+          RUST_BACKTRACE = "1";
           RUST_LOG = "debug";
         };
 
@@ -273,11 +273,15 @@
 
               miri = ''
                 export QUICKCHECK_TESTS=10
+                cargo miri test
+                cargo miri test --release
                 cargo miri test --all-features
                 cargo miri test --all-features --release
               '';
 
               test = ''
+                cargo test
+                cargo test --release
                 cargo test --all-features
                 cargo test --all-features --release
               '';

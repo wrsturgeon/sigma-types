@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -57,6 +57,7 @@ const-evaluatable-unchecked = "deny"
 const-item-mutation = "deny"
 dangling-pointers-from-temporaries = "deny"
 dead-code = "deny"
+default-overrides-default-fields = "deny"
 dependency-on-unit-never-type-fallback = "deny"
 deprecated = "deny"
 deprecated-in-future = "deny"

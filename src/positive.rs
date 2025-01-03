@@ -7,9 +7,9 @@ use {
 
 /// A term expected to be positive was not.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NonPositive<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
+pub struct NotPositive<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
 
-impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NonPositive<'_, Input> {
+impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NotPositive<'_, Input> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #![expect(
@@ -32,7 +32,7 @@ pub struct PositiveInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<
 impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for PositiveInvariant<Input> {
     const ADJECTIVE: &str = "positive";
     type Error<'i>
-        = NonPositive<'i, Input>
+        = NotPositive<'i, Input>
     where
         Input: 'i;
 
@@ -41,7 +41,7 @@ impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for PositiveInvariant
         if *input > Input::ZERO {
             Ok(())
         } else {
-            Err(NonPositive(input))
+            Err(NotPositive(input))
         }
     }
 }

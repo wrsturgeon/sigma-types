@@ -278,4 +278,103 @@ quickcheck::quickcheck! {
             TestResult::error(format!("{i:#?} -> {json:#?} -> {rust:#?} =/= {i:#?}"))
         }
     }
+
+    #[cfg(debug_assertions)]
+    fn i64_negative(i: i64) -> TestResult {
+        type Negative = crate::Negative<i64>;
+        let actually_negative = i < 0;
+        match catch_unwind(|| Negative::new(i)) {
+            Ok(..) => {
+                if actually_negative {
+                    TestResult::passed()
+                } else {
+                    TestResult::error("non-negative but passed")
+                }
+            }
+            Err(e) => {
+                if actually_negative {
+                    TestResult::error(format!("negative but failed: {e:#?}"))
+                } else {
+                    TestResult::passed()
+                }
+            }
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn negative_also_non_positive(i: i64) -> () {
+        type Negative = crate::Negative<i64>;
+        type NonPositive = crate::NonPositive<i64>;
+        let Some(negative) = Negative::try_new(i) else {
+            return;
+        };
+        let _: &NonPositive = negative.also();
+    }
+
+    #[cfg(debug_assertions)]
+    fn non_positive_try_also_negative(i: i64) -> TestResult {
+        type NonPositive = crate::NonPositive<i64>;
+        type Negative = crate::Negative<i64>;
+        let Some(non_positive) = NonPositive::try_new(i) else {
+            return TestResult::discard();
+        };
+        let maybe_also: Result<&Negative, _> = non_positive.try_also();
+        match maybe_also {
+            Ok(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
+            Err(e) => if i == 0 { TestResult::passed() } else { TestResult::error(format!("Negative but failed: {e}")) },
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    #[cfg(feature = "serde")]
+    fn serde_roundtrip_negative_i64(i: i64) -> TestResult {
+        type Negative = crate::Negative<i64>;
+        let Ok(negative) = catch_unwind(|| Negative::new(i)) else {
+            return TestResult::discard();
+        };
+        let json = match serde_json::to_string(&negative) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't serialize {negative:#?}: {e}"))
+        };
+        let rust: Negative = match serde_json::from_str(&json) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"))
+        };
+        if negative == rust {
+            TestResult::passed()
+        } else {
+            TestResult::error(format!("{negative:#?} -> {json:#?} -> {rust:#?} =/= {negative:#?}"))
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    fn serde_fallible_negative_i64(i: i64) -> TestResult {
+        type Negative = crate::Negative<i64>;
+        let actually_negative = i < 0;
+        let json = match serde_json::to_string(&i) {
+            Ok(ok) => ok,
+            Err(e) => return TestResult::error(format!("Couldn't serialize {i:#?}: {e}"))
+        };
+        let rust: Negative = match serde_json::from_str(&json) {
+            Ok(ok) => {
+                if actually_negative {
+                    ok
+                } else {
+                    return TestResult::error(format!("Not negative, but deserialization succeeded: {i}"));
+                }
+            }
+            Err(e) => {
+                return if actually_negative {
+                    TestResult::error(format!("Couldn't deserialize {json:#?}: {e}"))
+                } else {
+                    TestResult::passed()
+                };
+            }
+        };
+        if i == *rust.as_ref() {
+            TestResult::passed()
+        } else {
+            TestResult::error(format!("{i:#?} -> {json:#?} -> {rust:#?} =/= {i:#?}"))
+        }
+    }
 }

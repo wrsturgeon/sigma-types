@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.4";
+        version = "0.2.5";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -68,25 +68,39 @@
 
         dependencies = { };
         dev-dependencies = {
-          quickcheck = [ ];
-          serde_json = [ "std" ];
+          quickcheck = {
+            features = [ ];
+            # The official (BurntSushi) version has this fucking unbelievable
+            # stack-overflow issue that hasn't been fixed in four years, so
+            # we're using the branch from the 2021(!) pull request to fix it.
+            url = "github:neithernut/quickcheck";
+          };
+          serde_json = {
+            features = [ "std" ];
+          };
         };
         features = {
           malachite = {
             dependencies = {
-              malachite-base = [ ];
+              malachite-base = {
+                features = [ ];
+              };
             };
             other-features = [ ];
           };
           quickcheck = {
             dependencies = {
-              quickcheck = [ ];
+              quickcheck = {
+                features = [ ];
+              };
             };
             other-features = [ ];
           };
           serde = {
             dependencies = {
-              serde = [ ];
+              serde = {
+                features = [ ];
+              };
             };
             other-features = [ ];
           };
@@ -178,24 +192,24 @@
           ${pkgs.lib.strings.concatLines (
             builtins.attrValues (
               builtins.mapAttrs (
-                pkg: features:
+                pkg: attrs:
                 "${pkg} = { version = \"${
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
-                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
-                } ] }"
+                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
+                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""} }"
               ) dependencies
             )
           )}
           ${pkgs.lib.strings.concatLines (
             builtins.attrValues (
               builtins.mapAttrs (
-                pkg: features:
+                pkg: attrs:
                 "${pkg} = { version = \"${
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
-                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
-                } ], optional = true }"
+                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
+                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""}, optional = true }"
               ) feature-dependencies
             )
           )}
@@ -203,12 +217,12 @@
           ${pkgs.lib.strings.concatLines (
             builtins.attrValues (
               builtins.mapAttrs (
-                pkg: features:
+                pkg: attrs:
                 "${pkg} = { version = \"${
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
-                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") features)
-                } ] }"
+                  pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
+                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""} }"
               ) dev-dependencies
             )
           )}

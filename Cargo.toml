@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -19,7 +19,7 @@ quickcheck = { version = "=1.0.3", default-features = false, features = [  ], op
 serde = { version = "=1.0.217", default-features = false, features = [  ], optional = true }
 
 [dev-dependencies]
-quickcheck = { version = "=1.0.3", default-features = false, features = [  ] }
+quickcheck = { version = "=1.0.3", default-features = false, features = [  ], url = "github:neithernut/quickcheck" }
 serde_json = { version = "=1.0.134", default-features = false, features = [ "std" ] }
 
 [features]

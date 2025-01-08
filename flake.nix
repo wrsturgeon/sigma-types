@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.5";
+        version = "0.2.6";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -73,7 +73,7 @@
             # The official (BurntSushi) version has this fucking unbelievable
             # stack-overflow issue that hasn't been fixed in four years, so
             # we're using the branch from the 2021(!) pull request to fix it.
-            url = "github:neithernut/quickcheck";
+            git = "https://github.com/neithernut/quickcheck.git";
           };
           serde_json = {
             features = [ "std" ];
@@ -92,6 +92,7 @@
             dependencies = {
               quickcheck = {
                 features = [ ];
+                git = "https://github.com/neithernut/quickcheck.git";
               };
             };
             other-features = [ ];
@@ -197,7 +198,7 @@
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
-                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""} }"
+                } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""} }"
               ) dependencies
             )
           )}
@@ -209,7 +210,7 @@
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
-                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""}, optional = true }"
+                } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""}, optional = true }"
               ) feature-dependencies
             )
           )}
@@ -222,7 +223,7 @@
                   if builtins.hasAttr pkg dependency-versions then "=${dependency-versions."${pkg}"}" else "*"
                 }\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
-                } ]${if attrs ? url then ", url = \"${attrs.url}\"" else ""} }"
+                } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""} }"
               ) dev-dependencies
             )
           )}

@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "sigma-types"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "malachite-base",
  "quickcheck",

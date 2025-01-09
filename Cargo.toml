@@ -14,13 +14,13 @@ categories = [ "data-structures", "development-tools", "mathematics", "no-std", 
 
 [dependencies]
 
-malachite-base = { version = "*", default-features = false, features = [  ], optional = true }
+malachite-base = { version = "=0.4.16", default-features = false, features = [  ], optional = true }
 quickcheck = { default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git", optional = true }
-serde = { version = "*", default-features = false, features = [  ], optional = true }
+serde = { version = "=1.0.217", default-features = false, features = [  ], optional = true }
 
 [dev-dependencies]
 quickcheck = { default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git" }
-serde_json = { version = "*", default-features = false, features = [ "std" ] }
+serde_json = { version = "=1.0.135", default-features = false, features = [ "std" ] }
 
 [features]
 malachite = [ "dep:malachite-base" ]

@@ -9,21 +9,24 @@ extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate std;
 
-#[cfg(not(feature = "serde"))]
-use serde_json as _;
-
 use {
     crate::{NonNegative, Zero as _},
     core::cmp::Ordering,
     quickcheck::TestResult,
 };
 
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+#[cfg(not(feature = "serde"))]
+use serde_json as _;
+
+#[cfg(feature = "quickcheck")]
+use {
+    crate::Positive,
+    quickcheck::{Arbitrary, Gen},
+};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports, reason = "complicated namespace resolution")]
-use alloc::format;
+use alloc::{format, vec::Vec};
 
 #[cfg(debug_assertions)]
 use std::panic::catch_unwind;
@@ -31,6 +34,22 @@ use std::panic::catch_unwind;
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 
 quickcheck::quickcheck! {
+    #[cfg(feature = "quickcheck")]
+    fn positive_f64_doesnt_panic_arbitrary(size: usize) -> TestResult {
+        let mut g = Gen::new(size);
+        let dropped: Positive<f64> = Arbitrary::arbitrary(&mut g);
+        _ = dropped;
+        TestResult::passed()
+    }
+
+    #[cfg(feature = "quickcheck")]
+    fn positive_f64_doesnt_panic_shrink(size: usize) -> TestResult {
+        let mut g = Gen::new(size);
+        let init: Positive<f64> = Arbitrary::arbitrary(&mut g);
+        for _ in init.shrink() {}
+        TestResult::passed()
+    }
+
     #[cfg(debug_assertions)]
     fn sorted_vec_non_strict(v: Vec<u8>) -> TestResult {
         type Sorted = crate::Sorted<Vec<u8>, true>;

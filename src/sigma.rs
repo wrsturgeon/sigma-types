@@ -1,7 +1,7 @@
 //! Type that maintains a given invariant.
 
 use {
-    crate::{NonNegative, OnUnit, One, Positive, Zero},
+    crate::{CanBeInfinite, NonNegative, OnUnit, One, Positive, Zero},
     core::{
         borrow::Borrow,
         cmp::Ordering,
@@ -316,7 +316,8 @@ impl<Raw: Arbitrary + fmt::Debug, Invariant: 'static + crate::Test<Raw, 1>> Arbi
     #[inline]
     fn arbitrary(g: &mut Gen) -> Self {
         loop {
-            if let Some(sigma) = Self::try_new(Arbitrary::arbitrary(g)) {
+            let raw: Raw = Arbitrary::arbitrary(g);
+            if let Some(sigma) = Self::try_new(raw) {
                 return sigma;
             }
         }
@@ -343,6 +344,15 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Borrow<Raw> for Sigma<Raw,
     #[inline(always)]
     fn borrow(&self) -> &Raw {
         &self.raw
+    }
+}
+
+impl<Raw: CanBeInfinite + fmt::Debug, Invariant: crate::Test<Raw>> CanBeInfinite
+    for Sigma<Raw, Invariant>
+{
+    #[inline(always)]
+    fn check_finite(&self) -> bool {
+        self.raw.check_finite()
     }
 }
 

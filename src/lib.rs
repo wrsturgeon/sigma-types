@@ -8,6 +8,7 @@ mod all_pairs;
 #[cfg(all(not(feature = "std"), feature = "quickcheck"))]
 extern crate alloc;
 
+mod finite;
 mod invariant;
 mod negative;
 mod non_negative;
@@ -30,6 +31,7 @@ mod zero;
 pub use {
     all::{All, NotAll},
     all_pairs::{AllPairs, NotAllPairs},
+    finite::{CanBeInfinite, Finite, FiniteInvariant, NotFinite},
     invariant::Test,
     negative::{Negative, NegativeInvariant, NotNegative},
     non_negative::{NonNegative, NonNegativeInvariant, NotNonNegative},

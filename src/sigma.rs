@@ -521,7 +521,7 @@ impl<
 {
     #[inline]
     fn add_assign(&mut self, rhs: Sigma<R, Invariant>) {
-        self.modify(|lhs| lhs.add_assign(rhs.get()))
+        self.modify(|lhs| lhs.add_assign(rhs.get()));
     }
 }
 

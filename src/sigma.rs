@@ -1,7 +1,7 @@
 //! Type that maintains a given invariant.
 
 use {
-    crate::{CanBeInfinite, NonNegative, OnUnit, One, Positive, Zero},
+    crate::{CanBeInfinite, Finite, NonNegative, OnUnit, One, Positive, Zero},
     core::{
         borrow::Borrow,
         cmp::Ordering,
@@ -20,6 +20,13 @@ use quickcheck::{Arbitrary, Gen};
 
 #[cfg(all(feature = "quickcheck", not(feature = "std")))]
 use alloc::boxed::Box;
+
+impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
+    const ZERO: Self = Self {
+        phantom: PhantomData,
+        raw: Z::ZERO,
+    };
+}
 
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
     const ONE: Self = Self {
@@ -492,12 +499,80 @@ impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw, 1>> fmt::Displa
     }
 }
 
+impl<
+    L: fmt::Debug + ops::Add<R, Output: fmt::Debug>,
+    R: fmt::Debug,
+    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
+> ops::Add<Sigma<R, Invariant>> for Sigma<L, Invariant>
+{
+    type Output = Sigma<L::Output, Invariant>;
+
+    #[inline]
+    fn add(self, rhs: Sigma<R, Invariant>) -> Self::Output {
+        self.map(|lhs| lhs.add(rhs.get()))
+    }
+}
+
+impl<
+    L: fmt::Debug + ops::AddAssign<R>,
+    R: fmt::Debug,
+    Invariant: crate::Test<L, 1> + crate::Test<R, 1>,
+> ops::AddAssign<Sigma<R, Invariant>> for Sigma<L, Invariant>
+{
+    #[inline]
+    fn add_assign(&mut self, rhs: Sigma<R, Invariant>) {
+        self.modify(|lhs| lhs.add_assign(rhs.get()))
+    }
+}
+
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> ops::Deref for Sigma<Raw, Invariant> {
     type Target = Raw;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.raw
+    }
+}
+
+impl<
+    L: fmt::Debug + ops::Div<R, Output: fmt::Debug>,
+    R: fmt::Debug,
+    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
+> ops::Div<Sigma<R, Invariant>> for Sigma<L, Invariant>
+{
+    type Output = Sigma<L::Output, Invariant>;
+
+    #[inline]
+    fn div(self, rhs: Sigma<R, Invariant>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: fmt::Debug + ops::Mul<R, Output: fmt::Debug>,
+    R: fmt::Debug,
+    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
+> ops::Mul<Sigma<R, Invariant>> for Sigma<L, Invariant>
+{
+    type Output = Sigma<L::Output, Invariant>;
+
+    #[inline]
+    fn mul(self, rhs: Sigma<R, Invariant>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: fmt::Debug + ops::Sub<R, Output: fmt::Debug>,
+    R: fmt::Debug,
+    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
+> ops::Sub<Sigma<R, Invariant>> for Sigma<L, Invariant>
+{
+    type Output = Sigma<L::Output, Invariant>;
+
+    #[inline]
+    fn sub(self, rhs: Sigma<R, Invariant>) -> Self::Output {
+        self.map(|lhs| lhs.sub(rhs.get()))
     }
 }
 

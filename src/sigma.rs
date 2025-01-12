@@ -51,6 +51,19 @@ impl<
     }
 }
 
+impl<
+    L: CanBeInfinite + fmt::Debug + ops::Mul<R, Output: CanBeInfinite + fmt::Debug>,
+    R: CanBeInfinite + fmt::Debug,
+> ops::Mul<Finite<R>> for Finite<L>
+{
+    type Output = Finite<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Finite<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
 impl<Raw: CanBeInfinite + fmt::Debug + ops::Neg> ops::Neg for Finite<Raw>
 where
     Raw::Output: CanBeInfinite + fmt::Debug,
@@ -86,6 +99,32 @@ impl<
     #[inline]
     fn div(self, rhs: Negative<R>) -> Self::Output {
         self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Positive<R>> for Negative<L>
+{
+    type Output = Negative<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Negative<R>> for Negative<L>
+{
+    type Output = Positive<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 
@@ -141,6 +180,32 @@ impl<
     }
 }
 
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Positive<R>> for NonNegative<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Negative<R>> for NonNegative<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
 impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonNegative<Raw>
 where
     Raw::Output: PartialOrd + Zero + fmt::Debug,
@@ -179,6 +244,32 @@ impl<
     }
 }
 
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Positive<R>> for NonPositive<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Negative<R>> for NonPositive<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
 impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonPositive<Raw>
 where
     Raw::Output: PartialOrd + Zero + fmt::Debug,
@@ -201,6 +292,19 @@ impl<
     #[inline]
     fn div(self, rhs: NonZero<R>) -> Self::Output {
         self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<NonZero<R>> for NonZero<L>
+{
+    type Output = NonZero<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: NonZero<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 
@@ -263,6 +367,32 @@ impl<
     #[inline]
     fn div(self, rhs: Positive<R>) -> Self::Output {
         self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Negative<R>> for Positive<L>
+{
+    type Output = Negative<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<Positive<R>> for Positive<L>
+{
+    type Output = Positive<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 
@@ -742,36 +872,6 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> ops::Deref for Sigma<Raw, 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.raw
-    }
-}
-
-/*
-impl<
-    L: fmt::Debug + ops::Div<R, Output: fmt::Debug>,
-    R: fmt::Debug,
-    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
-> ops::Div<Sigma<R, Invariant>> for Sigma<L, Invariant>
-{
-    type Output = Sigma<L::Output, Invariant>;
-
-    #[inline]
-    fn div(self, rhs: Sigma<R, Invariant>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-*/
-
-impl<
-    L: fmt::Debug + ops::Mul<R, Output: fmt::Debug>,
-    R: fmt::Debug,
-    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
-> ops::Mul<Sigma<R, Invariant>> for Sigma<L, Invariant>
-{
-    type Output = Sigma<L::Output, Invariant>;
-
-    #[inline]
-    fn mul(self, rhs: Sigma<R, Invariant>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 

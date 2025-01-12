@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.2.7"
+version = "0.2.8"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -362,6 +362,7 @@ doc-link-with-quotes = "deny"
 doc-markdown = "deny"
 doc-nested-refdefs = "deny"
 double-comparisons = "deny"
+double-ended-iterator-last = "deny"
 double-must-use = "deny"
 double-neg = "deny"
 double-parens = "deny"

@@ -13,6 +13,7 @@ mod invariant;
 mod negative;
 mod non_negative;
 mod non_positive;
+mod non_zero;
 mod on_unit;
 
 #[cfg(not(feature = "malachite"))]
@@ -36,6 +37,7 @@ pub use {
     negative::{Negative, NegativeInvariant, NotNegative},
     non_negative::{NonNegative, NonNegativeInvariant, NotNonNegative},
     non_positive::{NonPositive, NonPositiveInvariant, NotNonPositive},
+    non_zero::{NonZero, NonZeroInvariant, NotNonZero},
     on_unit::{NotOnUnit, OnUnit, OnUnitInvariant},
     positive::{NotPositive, Positive, PositiveInvariant},
     sigma::Sigma,

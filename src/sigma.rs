@@ -423,9 +423,19 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).
     /// # Panics
     /// If the latter invariant does not hold.
+    #[inline(always)]
+    pub fn also<OtherInvariant: crate::Test<Raw, 1>>(self) -> Sigma<Raw, OtherInvariant> {
+        Sigma::new(self.get())
+    }
+
+    /// Without changing its internal value,
+    /// view one sigma-typed value as implementing another sigma type
+    /// by checking the latter invariant at runtime (iff debug assertions are enabled).
+    /// # Panics
+    /// If the latter invariant does not hold.
     #[inline]
     #[cfg(debug_assertions)]
-    pub fn also<OtherInvariant: crate::Test<Raw, 1>>(&self) -> &Sigma<Raw, OtherInvariant> {
+    pub fn also_ref<OtherInvariant: crate::Test<Raw, 1>>(&self) -> &Sigma<Raw, OtherInvariant> {
         let ptr: *const Self = self;
         // SAFETY:
         // Pointer reinterpretation. See `repr(transparent)` above.
@@ -440,7 +450,9 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).
     #[inline]
     #[cfg(not(debug_assertions))]
-    pub const fn also<OtherInvariant: crate::Test<Raw, 1>>(&self) -> &Sigma<Raw, OtherInvariant> {
+    pub const fn also_ref<OtherInvariant: crate::Test<Raw, 1>>(
+        &self,
+    ) -> &Sigma<Raw, OtherInvariant> {
         let ptr: *const Self = self;
         // SAFETY:
         // Pointer reinterpretation. See `repr(transparent)` above.
@@ -513,6 +525,14 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
         &mut self.raw
     }
 
+    /// Unwrap the internal value that satisfies the invariant.
+    /// If you're using this to create another value that should
+    /// also maintain an invariant, use `map` instead.
+    #[inline(always)]
+    pub const fn get_ref(&self) -> &Raw {
+        &self.raw
+    }
+
     /// Apply a function to a term that implements a given invariant (say, A),
     /// then check the output for a (possibly different) invariant (say, B).
     #[inline]
@@ -529,6 +549,16 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
         Sigma::new(f(self.get()))
     }
 
+    /// Apply a function that mutates this value,
+    /// then check that the operation maintained this invariant.
+    #[inline]
+    pub fn map_mut<Y, F: FnOnce(&mut Raw) -> Y>(&mut self, f: F) -> Y {
+        let raw = self.get_mut();
+        let y = f(raw);
+        self.check();
+        y
+    }
+
     /// Apply a function to a term that implements a given invariant (say, A),
     /// then check the output for a (possibly different) invariant (say, B).
     #[inline]
@@ -543,16 +573,6 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
         f: F,
     ) -> Sigma<OtherRaw, OtherInvariant> {
         Sigma::new(f(self))
-    }
-
-    /// Apply a function that mutates this value,
-    /// then check that the operation maintained this invariant.
-    #[inline]
-    pub fn modify<Y, F: FnOnce(&mut Raw) -> Y>(&mut self, f: F) -> Y {
-        let raw = self.get_mut();
-        let y = f(raw);
-        self.check();
-        y
     }
 
     /// Create a new sigma type instance by checking an invariant.
@@ -588,6 +608,18 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// If the latter invariant does not hold.
     #[inline]
     pub fn try_also<OtherInvariant: crate::Test<Raw, 1>>(
+        self,
+    ) -> Option<Sigma<Raw, OtherInvariant>> {
+        Sigma::try_new(self.get())
+    }
+
+    /// Without changing its internal value,
+    /// try to view one sigma-typed value as implementing another sigma type
+    /// by checking the latter invariant at runtime.
+    /// # Errors
+    /// If the latter invariant does not hold.
+    #[inline]
+    pub fn try_also_ref<OtherInvariant: crate::Test<Raw, 1>>(
         &self,
     ) -> Result<&Sigma<Raw, OtherInvariant>, OtherInvariant::Error<'_>> {
         let ptr: *const Self = self;
@@ -862,7 +894,7 @@ impl<
 {
     #[inline]
     fn add_assign(&mut self, rhs: Sigma<R, Invariant>) {
-        self.modify(|lhs| lhs.add_assign(rhs.get()));
+        self.map_mut(|lhs| lhs.add_assign(rhs.get()));
     }
 }
 

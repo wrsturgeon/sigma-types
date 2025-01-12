@@ -272,7 +272,17 @@ quickcheck::quickcheck! {
         let Some(positive) = Positive::try_new(i) else {
             return;
         };
-        let _: &NonNegative = positive.also();
+        let _: NonNegative = positive.also();
+    }
+
+    #[cfg(debug_assertions)]
+    fn positive_also_ref_non_negative(i: i64) -> () {
+        type Positive = crate::Positive<i64>;
+        type NonNegative = crate::NonNegative<i64>;
+        let Some(positive) = Positive::try_new(i) else {
+            return;
+        };
+        let _: &NonNegative = positive.also_ref();
     }
 
     #[cfg(debug_assertions)]
@@ -282,7 +292,21 @@ quickcheck::quickcheck! {
         let Some(non_negative) = NonNegative::try_new(i) else {
             return TestResult::discard();
         };
-        let maybe_also: Result<&Positive, _> = non_negative.try_also();
+        let maybe_also: Option<Positive> = non_negative.try_also();
+        match maybe_also {
+            Some(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
+            None => if i == 0 { TestResult::passed() } else { TestResult::error("Positive but failed") },
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn non_negative_try_also_ref_positive(i: i64) -> TestResult {
+        type NonNegative = crate::NonNegative<i64>;
+        type Positive = crate::Positive<i64>;
+        let Some(non_negative) = NonNegative::try_new(i) else {
+            return TestResult::discard();
+        };
+        let maybe_also: Result<&Positive, _> = non_negative.try_also_ref();
         match maybe_also {
             Ok(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
             Err(e) => if i == 0 { TestResult::passed() } else { TestResult::error(format!("Positive but failed: {e}")) },
@@ -371,7 +395,17 @@ quickcheck::quickcheck! {
         let Some(negative) = Negative::try_new(i) else {
             return;
         };
-        let _: &NonPositive = negative.also();
+        let _: NonPositive = negative.also();
+    }
+
+    #[cfg(debug_assertions)]
+    fn negative_also_ref_non_positive(i: i64) -> () {
+        type Negative = crate::Negative<i64>;
+        type NonPositive = crate::NonPositive<i64>;
+        let Some(negative) = Negative::try_new(i) else {
+            return;
+        };
+        let _: &NonPositive = negative.also_ref();
     }
 
     #[cfg(debug_assertions)]
@@ -381,7 +415,21 @@ quickcheck::quickcheck! {
         let Some(non_positive) = NonPositive::try_new(i) else {
             return TestResult::discard();
         };
-        let maybe_also: Result<&Negative, _> = non_positive.try_also();
+        let maybe_also: Option<Negative> = non_positive.try_also();
+        match maybe_also {
+            Some(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
+            None => if i == 0 { TestResult::passed() } else { TestResult::error("Negative but failed") },
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn non_positive_try_also_ref_negative(i: i64) -> TestResult {
+        type NonPositive = crate::NonPositive<i64>;
+        type Negative = crate::Negative<i64>;
+        let Some(non_positive) = NonPositive::try_new(i) else {
+            return TestResult::discard();
+        };
+        let maybe_also: Result<&Negative, _> = non_positive.try_also_ref();
         match maybe_also {
             Ok(..) => if i == 0 { TestResult::error("Zero but passed") } else { TestResult::passed() },
             Err(e) => if i == 0 { TestResult::passed() } else { TestResult::error(format!("Negative but failed: {e}")) },

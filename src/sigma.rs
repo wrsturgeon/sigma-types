@@ -31,6 +31,69 @@ impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
     };
 }
 
+impl<
+    L: CanBeInfinite + fmt::Debug + ops::Div<R, Output: CanBeInfinite + fmt::Debug>,
+    R: CanBeInfinite + fmt::Debug,
+> ops::Div<Finite<R>> for Finite<L>
+{
+    type Output = Finite<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Finite<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: CanBeInfinite + fmt::Debug + ops::Neg> ops::Neg for Finite<Raw>
+where
+    Raw::Output: CanBeInfinite + fmt::Debug,
+{
+    type Output = Finite<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Positive<R>> for Negative<L>
+{
+    type Output = Negative<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Negative<R>> for Negative<L>
+{
+    type Output = Positive<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Negative<Raw>
+where
+    Raw::Output: PartialOrd + Zero + fmt::Debug,
+{
+    type Output = Positive<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
+}
+
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
     const ONE: Self = Self {
         phantom: PhantomData,
@@ -43,6 +106,106 @@ impl<Z: PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
         phantom: PhantomData,
         raw: Z::ZERO,
     };
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Positive<R>> for NonNegative<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Negative<R>> for NonNegative<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonNegative<Raw>
+where
+    Raw::Output: PartialOrd + Zero + fmt::Debug,
+{
+    type Output = NonPositive<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Positive<R>> for NonPositive<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Negative<R>> for NonPositive<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonPositive<Raw>
+where
+    Raw::Output: PartialOrd + Zero + fmt::Debug,
+{
+    type Output = NonNegative<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<NonZero<R>> for NonZero<L>
+{
+    type Output = NonZero<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: NonZero<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg<Output: PartialOrd + Zero + fmt::Debug>>
+    ops::Neg for NonZero<Raw>
+{
+    type Output = NonZero<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
 }
 
 impl<T: One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: bool> One
@@ -68,6 +231,44 @@ impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
         phantom: PhantomData,
         raw: T::ONE,
     };
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Negative<R>> for Positive<L>
+{
+    type Output = Negative<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<Positive<R>> for Positive<L>
+{
+    type Output = Positive<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: Positive<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Positive<Raw>
+where
+    Raw::Output: PartialOrd + Zero + fmt::Debug,
+{
+    type Output = Negative<Raw::Output>;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        self.map(Raw::neg)
+    }
 }
 
 /// Type that maintains a given invariant.
@@ -554,136 +755,6 @@ impl<
 */
 
 impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for Positive<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for Positive<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for Negative<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for Negative<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for NonNegative<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for NonNegative<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for NonPositive<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for NonPositive<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: CanBeInfinite + fmt::Debug + ops::Div<R, Output: CanBeInfinite + fmt::Debug>,
-    R: CanBeInfinite + fmt::Debug,
-> ops::Div<Finite<R>> for Finite<L>
-{
-    type Output = Finite<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Finite<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<NonZero<R>> for NonZero<L>
-{
-    type Output = NonZero<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: NonZero<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
     L: fmt::Debug + ops::Mul<R, Output: fmt::Debug>,
     R: fmt::Debug,
     Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
@@ -694,66 +765,6 @@ impl<
     #[inline]
     fn mul(self, rhs: Sigma<R, Invariant>) -> Self::Output {
         self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<Raw: CanBeInfinite + fmt::Debug + ops::Neg> ops::Neg for Finite<Raw>
-where
-    Raw::Output: CanBeInfinite + fmt::Debug,
-{
-    type Output = Finite<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Positive<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = Negative<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Negative<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = Positive<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonPositive<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = NonNegative<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonNegative<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = NonPositive<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
     }
 }
 

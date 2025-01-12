@@ -24,6 +24,13 @@ use quickcheck::{Arbitrary, Gen};
 #[cfg(all(feature = "quickcheck", not(feature = "std")))]
 use alloc::boxed::Box;
 
+impl<Z: CanBeInfinite + One + fmt::Debug> One for Finite<Z> {
+    const ONE: Self = Self {
+        phantom: PhantomData,
+        raw: Z::ONE,
+    };
+}
+
 impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
     const ZERO: Self = Self {
         phantom: PhantomData,

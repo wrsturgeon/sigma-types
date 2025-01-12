@@ -10,6 +10,7 @@ extern crate alloc;
 
 mod finite;
 mod invariant;
+pub mod less_than;
 mod negative;
 mod non_negative;
 mod non_positive;

@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.7";
+        version = "0.2.8";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -531,7 +531,14 @@
               {
                 inherit pname src;
                 name = pname;
-                cargoLock.lockFile = "${src}/Cargo.lock";
+                cargoLock={
+                  lockFile = "${src}/Cargo.lock";
+                  /*
+                  outputHashes = {
+                    "quickcheck-1.0.3" = "<hash>";
+                  };
+                  */
+                };
                 buildInputs = with pkgs; [ openssl ];
                 nativeBuildInputs = with pkgs; [
                   google-chrome

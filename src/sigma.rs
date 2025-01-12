@@ -470,6 +470,18 @@ pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> {
 }
 
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
+    /// Check all elements of an array.
+    #[inline]
+    pub fn all<const N: usize>(array: &[Raw; N]) -> &[Sigma<Raw, Invariant>; N] {
+        let pointer: *const [Raw; N] = array;
+        let cast: *const [Sigma<Raw, Invariant>; N] = pointer.cast();
+        let provisional = unsafe { &*cast };
+        for element in provisional {
+            element.check();
+        }
+        provisional
+    }
+
     /// Without changing its internal value,
     /// view one sigma-typed value as implementing another sigma type
     /// by checking the latter invariant at runtime (iff debug assertions are enabled).

@@ -1,4 +1,4 @@
-//! Non-positive types (defined by comparison to zero).
+//! Non-positive terms (defined by comparison to zero).
 
 use {
     crate::{Sigma, Test, Zero},

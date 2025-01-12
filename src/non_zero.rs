@@ -1,4 +1,4 @@
-//! Nonzero types (defined by comparison to zero).
+//! Nonzero terms (defined by comparison to zero).
 
 use {
     crate::{Sigma, Test, Zero},

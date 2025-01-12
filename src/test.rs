@@ -34,6 +34,28 @@ use std::panic::catch_unwind;
 const _CHECK_ZERO_IMPL_FOR_NON_NEGATIVE: NonNegative<u8> = NonNegative::ZERO;
 
 quickcheck::quickcheck! {
+    #[cfg(all(debug_assertions, feature = "quickcheck"))]
+    fn all_positive(tuple: (f64, f64, f64, f64)) -> TestResult {
+        let array: [f64; 4] = tuple.into();
+        let ground_truth = array.iter().all(|f| *f > 0_f64);
+        match catch_unwind(|| Positive::all(&array)) {
+            Ok(..) => {
+                if ground_truth {
+                    TestResult::passed()
+                } else {
+                    TestResult::error("not all positive but passed")
+                }
+            }
+            Err(e) => {
+                if ground_truth {
+                    TestResult::error(format!("all positive but failed: {e:#?}"))
+                } else {
+                    TestResult::passed()
+                }
+            }
+        }
+    }
+
     #[cfg(feature = "quickcheck")]
     fn positive_f64_doesnt_panic_arbitrary(size: usize) -> TestResult {
         let mut g = Gen::new(size);

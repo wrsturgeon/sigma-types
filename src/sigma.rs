@@ -181,6 +181,32 @@ impl<
 }
 
 impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<NonPositive<R>> for NonNegative<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: NonPositive<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Div<NonNegative<R>> for NonNegative<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn div(self, rhs: NonNegative<R>) -> Self::Output {
+        self.map(|lhs| lhs.div(rhs.get()))
+    }
+}
+
+impl<
     L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
     R: PartialOrd + Zero + fmt::Debug,
 > ops::Mul<Positive<R>> for NonNegative<L>
@@ -266,6 +292,32 @@ impl<
 
     #[inline]
     fn mul(self, rhs: Negative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<NonPositive<R>> for NonPositive<L>
+{
+    type Output = NonNegative<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: NonPositive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
+    }
+}
+
+impl<
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
+    R: PartialOrd + Zero + fmt::Debug,
+> ops::Mul<NonNegative<R>> for NonPositive<L>
+{
+    type Output = NonPositive<L::Output>;
+
+    #[inline]
+    fn mul(self, rhs: NonNegative<R>) -> Self::Output {
         self.map(|lhs| lhs.mul(rhs.get()))
     }
 }

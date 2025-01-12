@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.2.8"
+version = "0.2.7"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -15,11 +15,11 @@ categories = [ "data-structures", "development-tools", "mathematics", "no-std", 
 [dependencies]
 
 malachite-base = { version = "=0.4.16", default-features = false, features = [  ], optional = true }
-quickcheck = { default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git", optional = true }
+quickcheck = { version = "=1.0.3", default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git", optional = true }
 serde = { version = "=1.0.217", default-features = false, features = [  ], optional = true }
 
 [dev-dependencies]
-quickcheck = { default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git" }
+quickcheck = { version = "=1.0.3", default-features = false, features = [  ], git = "https://github.com/neithernut/quickcheck.git" }
 serde_json = { version = "=1.0.135", default-features = false, features = [ "std" ] }
 
 [features]

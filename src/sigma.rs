@@ -181,28 +181,28 @@ impl<
 }
 
 impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
     R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<NonPositive<R>> for NonNegative<L>
+> ops::Mul<NonPositive<R>> for NonNegative<L>
 {
     type Output = NonPositive<L::Output>;
 
     #[inline]
-    fn div(self, rhs: NonPositive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
+    fn mul(self, rhs: NonPositive<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 
 impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
+    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
     R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<NonNegative<R>> for NonNegative<L>
+> ops::Mul<NonNegative<R>> for NonNegative<L>
 {
     type Output = NonNegative<L::Output>;
 
     #[inline]
-    fn div(self, rhs: NonNegative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
+    fn mul(self, rhs: NonNegative<R>) -> Self::Output {
+        self.map(|lhs| lhs.mul(rhs.get()))
     }
 }
 

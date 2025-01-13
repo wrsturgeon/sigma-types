@@ -109,7 +109,8 @@ dependencies = [
 [[package]]
 name = "quickcheck"
 version = "1.0.3"
-source = "git+https://github.com/neithernut/quickcheck.git#aa968a94650b5d4d572c4ef581a7f5eb259aa0d2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "588f6378e4dd99458b60ec275b4477add41ce4fa9f64dcba6f15adccb19b50d6"
 dependencies = [
  "rand",
 ]
@@ -181,7 +182,7 @@ dependencies = [
 
 [[package]]
 name = "sigma-types"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "malachite-base",
  "quickcheck",

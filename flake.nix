@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.2.8";
+        version = "0.2.9";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -70,10 +70,6 @@
         dev-dependencies = {
           quickcheck = {
             features = [ ];
-            # The official (BurntSushi) version has this fucking unbelievable
-            # stack-overflow issue that hasn't been fixed in four years, so
-            # we're using the branch from the 2021(!) pull request to fix it.
-            git = "https://github.com/neithernut/quickcheck.git";
           };
           serde_json = {
             features = [ "std" ];
@@ -92,7 +88,6 @@
             dependencies = {
               quickcheck = {
                 features = [ ];
-                git = "https://github.com/neithernut/quickcheck.git";
               };
             };
             other-features = [ ];

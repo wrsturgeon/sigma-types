@@ -12,6 +12,7 @@ pub mod usize {
     pub type LessThan<const N: usize> = Sigma<usize, LessThanInvariant<N>>;
 
     /// Terms less than a constant (defined by `PartialOrd` comparison).
+    #[expect(clippy::exhaustive_structs, reason = "no fields")]
     #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct LessThanInvariant<const N: usize>;
 

@@ -472,9 +472,11 @@ pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> {
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// Check all elements of an array.
     #[inline]
-    pub fn all<const N: usize>(array: &[Raw; N]) -> &[Sigma<Raw, Invariant>; N] {
+    pub fn all<const N: usize>(array: &[Raw; N]) -> &[Self; N] {
         let pointer: *const [Raw; N] = array;
-        let cast: *const [Sigma<Raw, Invariant>; N] = pointer.cast();
+        let cast: *const [Self; N] = pointer.cast();
+        // SAFETY:
+        // `repr(transparent)`
         let provisional = unsafe { &*cast };
         for element in provisional {
             element.check();

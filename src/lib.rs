@@ -10,7 +10,7 @@ extern crate alloc;
 
 mod finite;
 mod invariant;
-pub mod less_than;
+mod less_than;
 mod negative;
 mod non_negative;
 mod non_positive;
@@ -35,6 +35,7 @@ pub use {
     all_pairs::{AllPairs, NotAllPairs},
     finite::{CanBeInfinite, Finite, FiniteInvariant, NotFinite},
     invariant::Test,
+    less_than::{i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize},
     negative::{Negative, NegativeInvariant, NotNegative},
     non_negative::{NonNegative, NonNegativeInvariant, NotNonNegative},
     non_positive::{NonPositive, NonPositiveInvariant, NotNonPositive},

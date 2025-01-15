@@ -383,7 +383,7 @@ impl_mul!(Positive, NonNegative, NonNegative, PartialOrd, Zero);
 impl_mul!(Positive, NonPositive, NonPositive, PartialOrd, Zero);
 impl_mul!(Positive, Positive, Positive, PartialOrd, Zero);
 impl_mul_assign!(Positive, Positive, PartialOrd, Zero);
-impl_op_1!(Neg, neg, Positive, NonPositive, PartialOrd, Zero);
+impl_op_1!(Neg, neg, Positive, Negative, PartialOrd, Zero);
 
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
     const ONE: Self = Self {

@@ -26,7 +26,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.3.1";
+        version = "0.3.2";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -195,7 +195,7 @@
             builtins.attrValues (
               builtins.mapAttrs (
                 pkg: attrs:
-                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then "=${dependency-versions.${pkg}}" else "*"}\", default-features = false, features = [ ${
+                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then dependency-versions.${pkg} else "*"}\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
                 } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""} }"
               ) dependencies
@@ -205,7 +205,7 @@
             builtins.attrValues (
               builtins.mapAttrs (
                 pkg: attrs:
-                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then "=${dependency-versions.${pkg}}" else "*"}\", default-features = false, features = [ ${
+                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then dependency-versions.${pkg} else "*"}\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
                 } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""}, optional = true }"
               ) feature-dependencies
@@ -216,7 +216,7 @@
             builtins.attrValues (
               builtins.mapAttrs (
                 pkg: attrs:
-                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then "=${dependency-versions.${pkg}}" else "*"}\", default-features = false, features = [ ${
+                "${pkg} = { version = \"${if builtins.hasAttr pkg dependency-versions then dependency-versions.${pkg} else "*"}\", default-features = false, features = [ ${
                   pkgs.lib.strings.concatStringsSep ", " (builtins.map (feature: "\"${feature}\"") attrs.features)
                 } ]${if attrs ? git then ", git = \"${attrs.git}\"" else ""} }"
               ) dev-dependencies

@@ -15,13 +15,16 @@ use {
     },
 };
 
+#[cfg(test)]
+use {paste::paste, quickcheck::TestResult, quickcheck_macros::quickcheck};
+
 #[cfg(feature = "std")]
 use std::env;
 
-#[cfg(feature = "quickcheck")]
+#[cfg(any(test, feature = "quickcheck"))]
 use quickcheck::{Arbitrary, Gen};
 
-#[cfg(all(feature = "quickcheck", not(feature = "std")))]
+#[cfg(all(any(test, feature = "quickcheck"), not(feature = "std")))]
 use alloc::boxed::Box;
 
 impl<Z: CanBeInfinite + One + fmt::Debug> One for Finite<Z> {
@@ -38,107 +41,244 @@ impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
     };
 }
 
-impl<
-    L: CanBeInfinite + fmt::Debug + ops::Div<R, Output: CanBeInfinite + fmt::Debug>,
-    R: CanBeInfinite + fmt::Debug,
-> ops::Div<Finite<R>> for Finite<L>
-{
-    type Output = Finite<L::Output>;
+macro_rules! impl_op_1 {
+    ($op:ident, $fn:ident, $lhs:ident, $out:ident $(, $($bound:ident),* $(,)?)?) => {
+        impl<
+            L: $($($bound +)*)? fmt::Debug + ops::$op<Output: $($($bound +)*)? fmt::Debug>,
+        > ops::$op for $lhs<L>
+        {
+            type Output = $out<<L as ops::$op>::Output>;
 
-    #[inline]
-    fn div(self, rhs: Finite<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
+            #[inline]
+            fn $fn(self) -> Self::Output {
+                self.map(|lhs| lhs.$fn())
+            }
+        }
+
+        #[cfg(test)]
+        paste! {
+            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
+            #[quickcheck]
+            fn [< doesnt_panic_ $lhs:snake _ $fn >](lhs: $lhs</* L */ f64>) -> TestResult {
+                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                _ = <$lhs</* L */ f64> as ops::$op>::$fn(lhs);
+                TestResult::passed()
+            }
+        }
+    };
 }
 
-impl<
-    L: CanBeInfinite + fmt::Debug + ops::Mul<R, Output: CanBeInfinite + fmt::Debug>,
-    R: CanBeInfinite + fmt::Debug,
-> ops::Mul<Finite<R>> for Finite<L>
-{
-    type Output = Finite<L::Output>;
+macro_rules! impl_op_2 {
+    ($op:ident, $fn:ident, $lhs:ident, $rhs:ident, $out:ident, $reject:expr $(, $($bound:ident),* $(,)?)?) => {
+        impl<
+            L: $($($bound +)*)? fmt::Debug + ops::$op<R, Output: $($($bound +)*)? fmt::Debug>,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<$rhs<R>> for $lhs<L>
+        {
+            type Output = $out<<L as ops::$op<R>>::Output>;
 
-    #[inline]
-    fn mul(self, rhs: Finite<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
+            #[inline]
+            fn $fn(self, rhs: $rhs<R>) -> Self::Output {
+                self.map(|lhs| lhs.$fn(rhs.get()))
+            }
+        }
+
+        #[cfg(test)]
+        paste! {
+            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
+            #[quickcheck]
+            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                if toss(&lhs, &rhs) { return TestResult::discard() }
+                _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(lhs, rhs);
+                TestResult::passed()
+            }
+        }
+
+        impl<
+            'rhs,
+            L: $($($bound +)*)? fmt::Debug + ops::$op<&'rhs R, Output: $($($bound +)*)? fmt::Debug>,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<&'rhs $rhs<R>> for $lhs<L>
+        {
+            type Output = $out<<L as ops::$op<&'rhs R>>::Output>;
+
+            #[inline]
+            fn $fn(self, rhs: &'rhs $rhs<R>) -> Self::Output {
+                self.map(|lhs| lhs.$fn(rhs.get_ref()))
+            }
+        }
+
+        #[cfg(test)]
+        paste! {
+            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
+            #[quickcheck]
+            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                if toss(&lhs, &rhs) { return TestResult::discard() }
+                _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(lhs, &rhs);
+                TestResult::passed()
+            }
+        }
+
+        /*
+        impl<
+            'lhs,
+            L: $($($bound +)*)? fmt::Debug,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<$rhs<R>> for &'lhs $lhs<L>
+        where
+            &'lhs L: ops::$op<R, Output: $($($bound +)*)? fmt::Debug>,
+        {
+            type Output = $out<<&'lhs L as ops::$op<R>>::Output>;
+
+            #[inline]
+            fn $fn(self, rhs: $rhs<R>) -> Self::Output {
+                self.map_ref(|lhs| lhs.$fn(rhs.get()))
+            }
+        }
+
+        #[cfg(test)]
+        #[quickcheck]
+        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+            _ = <$lhs</* L */ f64> as ops::$ops>::$fn(lhs, rhs);
+            TestResult::passed()
+        }
+
+        impl<
+            'lhs,
+            'rhs,
+            L: $($($bound +)*)? fmt::Debug,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<&'rhs $rhs<R>> for &'lhs $lhs<L>
+        where
+            &'lhs L: ops::$op<&'rhs R, Output: $($($bound +)*)? fmt::Debug>,
+        {
+            type Output = $out<<&'lhs L as ops::$op<&'rhs R>>::Output>;
+
+            #[inline]
+            fn $fn(self, rhs: &'rhs $rhs<R>) -> Self::Output {
+                self.map_ref(|lhs| lhs.$fn(rhs.get_ref()))
+            }
+        }
+
+        #[cfg(test)]
+        #[quickcheck]
+        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+            _ = <$lhs</* L */ f64> as ops::$ops>::$fn(lhs, rhs);
+            TestResult::passed()
+        }
+        */
+    };
 }
 
-impl<Raw: CanBeInfinite + fmt::Debug + ops::Neg> ops::Neg for Finite<Raw>
-where
-    Raw::Output: CanBeInfinite + fmt::Debug,
-{
-    type Output = Finite<Raw::Output>;
+macro_rules! impl_op_assign {
+    ($op:ident, $fn:ident, $lhs:ident, $rhs:ident, $reject:expr $(, $($bound:ident),* $(,)?)?) => {
+        impl<
+            L: $($($bound +)*)? fmt::Debug + ops::$op<R>,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<$rhs<R>> for $lhs<L>
+        {
+            #[inline]
+            fn $fn(&mut self, rhs: $rhs<R>) {
+                self.map_mut(|lhs| lhs.$fn(rhs.get()))
+            }
+        }
 
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
+        #[cfg(test)]
+        paste! {
+            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
+            #[quickcheck]
+            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                if toss(&lhs, &rhs) { return TestResult::discard() }
+                _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(&mut lhs, rhs);
+                TestResult::passed()
+            }
+        }
+
+        impl<
+            'rhs,
+            L: $($($bound +)*)? fmt::Debug + ops::$op<&'rhs R>,
+            R: $($($bound +)*)? fmt::Debug,
+        > ops::$op<&'rhs $rhs<R>> for $lhs<L>
+        {
+            #[inline]
+            fn $fn(&mut self, rhs: &'rhs $rhs<R>) {
+                self.map_mut(|lhs| lhs.$fn(rhs.get_ref()))
+            }
+        }
+
+        #[cfg(test)]
+        paste! {
+            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
+            #[quickcheck]
+            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                if toss(&lhs, &rhs) { return TestResult::discard() }
+                _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(&mut lhs, &rhs);
+                TestResult::passed()
+            }
+        }
+    };
 }
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for Negative<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
+/// Addition only (and -assignment).
+macro_rules! impl_add {
+    ($lhs:ident, $rhs:ident, $out:ident $(, $($bound:ident),* $(,)?)?) => {
+        impl_op_2!(Add, add, $lhs, $rhs, $out, |_, _| false $(, $($bound,)*)?);
+        impl_op_assign!(AddAssign, add_assign, $lhs, $rhs, |_, _| false $(, $($bound,)*)?);
+    };
 }
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for Negative<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
+/// Subtraction only (and -assignment).
+macro_rules! impl_sub {
+    ($lhs:ident, $rhs:ident, $out:ident $(, $($bound:ident),* $(,)?)?) => {
+        impl_op_2!(Sub, sub, $lhs, $rhs, $out, |_, _| false $(, $($bound,)*)?);
+        impl_op_assign!(SubAssign, sub_assign, $lhs, $rhs, |_, _| false $(, $($bound,)*)?);
+    };
 }
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Positive<R>> for Negative<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
+/// All multiplicative traits (e.g. multiplication, division, ...).
+macro_rules! impl_mul {
+    ($lhs:ident, $rhs:ident, $out:ident $(, $($bound:ident),* $(,)?)?) => {
+        impl_op_2!(Div, div, $lhs, $rhs, $out, |_, rhs| rhs.get() == 0_f64 $(, $($bound,)*)?);
+        impl_op_2!(Mul, mul, $lhs, $rhs, $out, |_, _| false $(, $($bound,)*)?);
+    };
 }
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Negative<R>> for Negative<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
+/// All multiplicative traits (e.g. multiplication, division, ...).
+macro_rules! impl_mul_assign {
+    ($lhs:ident, $rhs:ident $(, $($bound:ident),* $(,)?)?) => {
+        impl_op_assign!(DivAssign, div_assign, $lhs, $rhs, |_, rhs| rhs.get() == 0_f64 $(, $($bound,)*)?);
+        impl_op_assign!(MulAssign, mul_assign, $lhs, $rhs, |_, _| false $(, $($bound,)*)?);
+    };
 }
 
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Negative<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = Positive<Raw::Output>;
+impl_add!(Finite, Finite, Finite, CanBeInfinite);
+impl_sub!(Finite, Finite, Finite, CanBeInfinite);
+impl_mul!(Finite, Finite, Finite, CanBeInfinite);
+impl_mul_assign!(Finite, Finite, CanBeInfinite);
+impl_op_1!(Neg, neg, Finite, Finite, CanBeInfinite);
 
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
+impl_add!(Negative, Negative, Negative, PartialOrd, Zero);
+impl_sub!(Negative, NonNegative, Negative, PartialOrd, Zero);
+impl_add!(Negative, NonPositive, Negative, PartialOrd, Zero);
+impl_sub!(Negative, Positive, Negative, PartialOrd, Zero);
+impl_mul!(Negative, Negative, Positive, PartialOrd, Zero);
+impl_mul!(Negative, NonNegative, NonPositive, PartialOrd, Zero);
+impl_mul!(Negative, NonPositive, NonNegative, PartialOrd, Zero);
+impl_mul!(Negative, Positive, Negative, PartialOrd, Zero);
+impl_mul_assign!(Negative, Positive, PartialOrd, Zero);
+impl_op_1!(Neg, neg, Negative, Positive, PartialOrd, Zero);
 
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for NonNegative<T> {
     const ONE: Self = Self {
@@ -154,222 +294,32 @@ impl<Z: PartialOrd + Zero + fmt::Debug> Zero for NonNegative<Z> {
     };
 }
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for NonNegative<L>
-{
-    type Output = NonNegative<L::Output>;
+impl_sub!(NonNegative, Negative, Positive, PartialOrd, Zero);
+impl_add!(NonNegative, NonNegative, NonNegative, PartialOrd, Zero);
+impl_sub!(NonNegative, NonPositive, NonNegative, PartialOrd, Zero);
+impl_add!(NonNegative, Positive, Positive, PartialOrd, Zero);
+impl_mul!(NonNegative, Negative, NonPositive, PartialOrd, Zero);
+impl_mul!(NonNegative, NonNegative, NonNegative, PartialOrd, Zero);
+impl_mul!(NonNegative, NonPositive, NonPositive, PartialOrd, Zero);
+impl_mul!(NonNegative, Positive, NonNegative, PartialOrd, Zero);
+impl_mul_assign!(NonNegative, NonNegative, PartialOrd, Zero);
+impl_mul_assign!(NonNegative, Positive, PartialOrd, Zero);
+impl_op_1!(Neg, neg, NonNegative, NonPositive, PartialOrd, Zero);
 
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
+impl_add!(NonPositive, Negative, Negative, PartialOrd, Zero);
+impl_sub!(NonPositive, NonNegative, NonPositive, PartialOrd, Zero);
+impl_add!(NonPositive, NonPositive, NonPositive, PartialOrd, Zero);
+impl_sub!(NonPositive, Positive, Negative, PartialOrd, Zero);
+impl_mul!(NonPositive, Negative, NonNegative, PartialOrd, Zero);
+impl_mul!(NonPositive, NonNegative, NonPositive, PartialOrd, Zero);
+impl_mul!(NonPositive, NonPositive, NonNegative, PartialOrd, Zero);
+impl_mul!(NonPositive, Positive, NonPositive, PartialOrd, Zero);
+impl_mul_assign!(NonPositive, NonNegative, PartialOrd, Zero);
+impl_mul_assign!(NonPositive, Positive, PartialOrd, Zero);
+impl_op_1!(Neg, neg, NonPositive, NonNegative, PartialOrd, Zero);
 
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for NonNegative<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<NonPositive<R>> for NonNegative<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: NonPositive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<NonNegative<R>> for NonNegative<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: NonNegative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Positive<R>> for NonNegative<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Negative<R>> for NonNegative<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonNegative<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = NonPositive<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for NonPositive<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for NonPositive<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Positive<R>> for NonPositive<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Negative<R>> for NonPositive<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<NonPositive<R>> for NonPositive<L>
-{
-    type Output = NonNegative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: NonPositive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<NonNegative<R>> for NonPositive<L>
-{
-    type Output = NonPositive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: NonNegative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for NonPositive<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = NonNegative<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<NonZero<R>> for NonZero<L>
-{
-    type Output = NonZero<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: NonZero<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<NonZero<R>> for NonZero<L>
-{
-    type Output = NonZero<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: NonZero<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg<Output: PartialOrd + Zero + fmt::Debug>>
-    ops::Neg for NonZero<Raw>
-{
-    type Output = NonZero<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
-}
+impl_mul!(NonZero, NonZero, NonZero, PartialEq, Zero);
+impl_op_1!(Neg, neg, NonZero, NonZero, PartialEq, Zero);
 
 impl<T: One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ZERO: bool> One
     for OnUnit<T, INCLUSIVE_AT_ZERO, true>
@@ -389,75 +339,22 @@ impl<Z: One + PartialOrd + Zero + fmt::Debug, const INCLUSIVE_AT_ONE: bool> Zero
     };
 }
 
+impl_sub!(Positive, Negative, Positive, PartialOrd, Zero);
+impl_add!(Positive, NonNegative, Positive, PartialOrd, Zero);
+impl_sub!(Positive, NonPositive, Positive, PartialOrd, Zero);
+impl_add!(Positive, Positive, Positive, PartialOrd, Zero);
+impl_mul!(Positive, Negative, Negative, PartialOrd, Zero);
+impl_mul!(Positive, NonNegative, NonNegative, PartialOrd, Zero);
+impl_mul!(Positive, NonPositive, NonPositive, PartialOrd, Zero);
+impl_mul!(Positive, Positive, Positive, PartialOrd, Zero);
+impl_mul_assign!(Positive, Positive, PartialOrd, Zero);
+impl_op_1!(Neg, neg, Positive, NonPositive, PartialOrd, Zero);
+
 impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
     const ONE: Self = Self {
         phantom: PhantomData,
         raw: T::ONE,
     };
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Negative<R>> for Positive<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Div<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Div<Positive<R>> for Positive<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn div(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.div(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Negative<R>> for Positive<L>
-{
-    type Output = Negative<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Negative<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<
-    L: PartialOrd + Zero + fmt::Debug + ops::Mul<R, Output: PartialOrd + Zero + fmt::Debug>,
-    R: PartialOrd + Zero + fmt::Debug,
-> ops::Mul<Positive<R>> for Positive<L>
-{
-    type Output = Positive<L::Output>;
-
-    #[inline]
-    fn mul(self, rhs: Positive<R>) -> Self::Output {
-        self.map(|lhs| lhs.mul(rhs.get()))
-    }
-}
-
-impl<Raw: PartialOrd + Zero + fmt::Debug + ops::Neg> ops::Neg for Positive<Raw>
-where
-    Raw::Output: PartialOrd + Zero + fmt::Debug,
-{
-    type Output = Negative<Raw::Output>;
-
-    #[inline]
-    fn neg(self) -> Self::Output {
-        self.map(Raw::neg)
-    }
 }
 
 /// Type that maintains a given invariant.
@@ -755,7 +652,7 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     }
 }
 
-#[cfg(feature = "quickcheck")]
+#[cfg(any(test, feature = "quickcheck"))]
 impl<Raw: Arbitrary + fmt::Debug, Invariant: 'static + crate::Test<Raw, 1>> Arbitrary
     for Sigma<Raw, Invariant>
 {
@@ -938,52 +835,12 @@ impl<Raw: fmt::Debug + fmt::Display, Invariant: crate::Test<Raw, 1>> fmt::Displa
     }
 }
 
-impl<
-    L: fmt::Debug + ops::Add<R, Output: fmt::Debug>,
-    R: fmt::Debug,
-    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
-> ops::Add<Sigma<R, Invariant>> for Sigma<L, Invariant>
-{
-    type Output = Sigma<L::Output, Invariant>;
-
-    #[inline]
-    fn add(self, rhs: Sigma<R, Invariant>) -> Self::Output {
-        self.map(|lhs| lhs.add(rhs.get()))
-    }
-}
-
-impl<
-    L: fmt::Debug + ops::AddAssign<R>,
-    R: fmt::Debug,
-    Invariant: crate::Test<L, 1> + crate::Test<R, 1>,
-> ops::AddAssign<Sigma<R, Invariant>> for Sigma<L, Invariant>
-{
-    #[inline]
-    fn add_assign(&mut self, rhs: Sigma<R, Invariant>) {
-        self.map_mut(|lhs| lhs.add_assign(rhs.get()));
-    }
-}
-
 impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> ops::Deref for Sigma<Raw, Invariant> {
     type Target = Raw;
 
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.raw
-    }
-}
-
-impl<
-    L: fmt::Debug + ops::Sub<R, Output: fmt::Debug>,
-    R: fmt::Debug,
-    Invariant: crate::Test<L, 1> + crate::Test<R, 1> + crate::Test<L::Output, 1>,
-> ops::Sub<Sigma<R, Invariant>> for Sigma<L, Invariant>
-{
-    type Output = Sigma<L::Output, Invariant>;
-
-    #[inline]
-    fn sub(self, rhs: Sigma<R, Invariant>) -> Self::Output {
-        self.map(|lhs| lhs.sub(rhs.get()))
     }
 }
 

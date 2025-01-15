@@ -5,7 +5,7 @@
 mod all;
 mod all_pairs;
 
-#[cfg(all(not(feature = "std"), feature = "quickcheck"))]
+#[cfg(all(not(feature = "std"), any(test, feature = "quickcheck")))]
 extern crate alloc;
 
 mod finite;

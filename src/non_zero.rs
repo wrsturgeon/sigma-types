@@ -10,9 +10,9 @@ pub type NonZero<Input> = Sigma<Input, NonZeroInvariant<Input>>;
 
 /// Nonzero terms (defined by comparison to zero).
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NonZeroInvariant<Input: fmt::Debug + PartialOrd + Zero>(PhantomData<Input>);
+pub struct NonZeroInvariant<Input: fmt::Debug + PartialEq + Zero>(PhantomData<Input>);
 
-impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for NonZeroInvariant<Input> {
+impl<Input: fmt::Debug + PartialEq + Zero> Test<Input, 1> for NonZeroInvariant<Input> {
     const ADJECTIVE: &str = "nonzero";
     type Error<'i>
         = NotNonZero<'i, Input>
@@ -31,9 +31,9 @@ impl<Input: fmt::Debug + PartialOrd + Zero> Test<Input, 1> for NonZeroInvariant<
 
 /// A term expected to be nonzero was, in fact, zero.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct NotNonZero<'i, Input: fmt::Debug + PartialOrd + Zero>(&'i Input);
+pub struct NotNonZero<'i, Input: fmt::Debug + PartialEq + Zero>(&'i Input);
 
-impl<Input: fmt::Debug + PartialOrd + Zero> fmt::Display for NotNonZero<'_, Input> {
+impl<Input: fmt::Debug + PartialEq + Zero> fmt::Display for NotNonZero<'_, Input> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #![expect(

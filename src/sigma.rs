@@ -1,5 +1,10 @@
 //! Type that maintains a given invariant.
 
+#![expect(
+    clippy::arbitrary_source_item_ordering,
+    reason = "macros must be defined before they're used"
+)]
+
 use {
     crate::{
         CanBeInfinite, Finite, Negative, NonNegative, NonPositive, NonZero, OnUnit, One, Positive,
@@ -27,20 +32,7 @@ use quickcheck::{Arbitrary, Gen};
 #[cfg(all(any(test, feature = "quickcheck"), not(feature = "std")))]
 use alloc::boxed::Box;
 
-impl<Z: CanBeInfinite + One + fmt::Debug> One for Finite<Z> {
-    const ONE: Self = Self {
-        phantom: PhantomData,
-        raw: Z::ONE,
-    };
-}
-
-impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
-    const ZERO: Self = Self {
-        phantom: PhantomData,
-        raw: Z::ZERO,
-    };
-}
-
+/// Implement a unary operation.
 macro_rules! impl_op_1 {
     ($op:ident, $fn:ident, $lhs:ident, $out:ident $(, $($bound:ident),* $(,)?)?) => {
         impl<
@@ -57,17 +49,23 @@ macro_rules! impl_op_1 {
 
         #[cfg(test)]
         paste! {
-            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
-            #[quickcheck]
-            fn [< doesnt_panic_ $lhs:snake _ $fn >](lhs: $lhs</* L */ f64>) -> TestResult {
-                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
-                _ = <$lhs</* L */ f64> as ops::$op>::$fn(lhs);
-                TestResult::passed()
+            #[cfg(test)]
+            #[expect(trivial_casts, clippy::as_conversions, reason = "must be an implementation detail of `quickcheck`")]
+            mod [< $lhs:snake _ $fn >] {
+                use super::*;
+
+                #[quickcheck]
+                fn doesnt_panic(lhs: $lhs</* L */ f64>) -> TestResult {
+                    if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    _ = <$lhs</* L */ f64> as ops::$op>::$fn(lhs);
+                    TestResult::passed()
+                }
             }
         }
     };
 }
 
+/// Implement a binary operation.
 macro_rules! impl_op_2 {
     ($op:ident, $fn:ident, $lhs:ident, $rhs:ident, $out:ident, $reject:expr $(, $($bound:ident),* $(,)?)?) => {
         impl<
@@ -85,15 +83,20 @@ macro_rules! impl_op_2 {
 
         #[cfg(test)]
         paste! {
-            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
-            #[quickcheck]
-            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
-                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
-                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
-                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
-                if toss(&lhs, &rhs) { return TestResult::discard() }
-                _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(lhs, rhs);
-                TestResult::passed()
+            #[cfg(test)]
+            #[expect(trivial_casts, clippy::as_conversions, reason = "must be an implementation detail of `quickcheck`")]
+            mod [< $lhs:snake _ $fn _ $rhs:snake >] {
+                use super::*;
+
+                #[quickcheck]
+                fn doesnt_panic(lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                    if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                    if toss(&lhs, &rhs) { return TestResult::discard() }
+                    _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(lhs, rhs);
+                    TestResult::passed()
+                }
             }
         }
 
@@ -113,15 +116,20 @@ macro_rules! impl_op_2 {
 
         #[cfg(test)]
         paste! {
-            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
-            #[quickcheck]
-            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
-                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
-                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
-                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
-                if toss(&lhs, &rhs) { return TestResult::discard() }
-                _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(lhs, &rhs);
-                TestResult::passed()
+            #[cfg(test)]
+            #[expect(trivial_casts, clippy::as_conversions, reason = "must be an implementation detail of `quickcheck`")]
+            mod [< $lhs:snake _ $fn _ $rhs:snake _ref >] {
+                use super::*;
+
+                #[quickcheck]
+                fn doesnt_panic(lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                    if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                    if toss(&lhs, &rhs) { return TestResult::discard() }
+                    _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(lhs, &rhs);
+                    TestResult::passed()
+                }
             }
         }
 
@@ -144,7 +152,8 @@ macro_rules! impl_op_2 {
 
         #[cfg(test)]
         #[quickcheck]
-        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >] {
+            fn doesnt_panic(lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
             _ = <$lhs</* L */ f64> as ops::$ops>::$fn(lhs, rhs);
             TestResult::passed()
         }
@@ -168,7 +177,8 @@ macro_rules! impl_op_2 {
 
         #[cfg(test)]
         #[quickcheck]
-        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+        fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >] {
+            fn doesnt_panic(lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
             _ = <$lhs</* L */ f64> as ops::$ops>::$fn(lhs, rhs);
             TestResult::passed()
         }
@@ -176,6 +186,7 @@ macro_rules! impl_op_2 {
     };
 }
 
+/// Implement a unary assignment operator.
 macro_rules! impl_op_assign {
     ($op:ident, $fn:ident, $lhs:ident, $rhs:ident, $reject:expr $(, $($bound:ident),* $(,)?)?) => {
         impl<
@@ -191,15 +202,20 @@ macro_rules! impl_op_assign {
 
         #[cfg(test)]
         paste! {
-            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
-            #[quickcheck]
-            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake >](mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
-                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
-                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
-                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
-                if toss(&lhs, &rhs) { return TestResult::discard() }
-                _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(&mut lhs, rhs);
-                TestResult::passed()
+            #[cfg(test)]
+            #[expect(trivial_casts, clippy::as_conversions, reason = "must be an implementation detail of `quickcheck`")]
+            mod [< $lhs:snake _ $fn _ $rhs:snake >] {
+                use super::*;
+
+                #[quickcheck]
+                fn doesnt_panic(mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                    if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                    if toss(&lhs, &rhs) { return TestResult::discard() }
+                    _ = <$lhs</* L */ f64> as ops::$op<$rhs</* R */ f64>>>::$fn(&mut lhs, rhs);
+                    TestResult::passed()
+                }
             }
         }
 
@@ -217,15 +233,20 @@ macro_rules! impl_op_assign {
 
         #[cfg(test)]
         paste! {
-            #[expect(trivial_casts, reason = "must be an implementation detail of `quickcheck`")]
-            #[quickcheck]
-            fn [< doesnt_panic_ $lhs:snake _ $fn _ $rhs:snake _ref >](mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
-                if lhs.abs() > 1e64_f64 { return TestResult::discard() }
-                if rhs.abs() > 1e64_f64 { return TestResult::discard() }
-                let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
-                if toss(&lhs, &rhs) { return TestResult::discard() }
-                _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(&mut lhs, &rhs);
-                TestResult::passed()
+            #[cfg(test)]
+            #[expect(trivial_casts, clippy::as_conversions, reason = "must be an implementation detail of `quickcheck`")]
+            mod [< $lhs:snake _ $fn _ $rhs:snake _ref >] {
+                use super::*;
+
+                #[quickcheck]
+                fn doesnt_panic(mut lhs: $lhs</* L */ f64>, rhs: $rhs</* R */ f64>) -> TestResult {
+                    if lhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    if rhs.abs() > 1e64_f64 { return TestResult::discard() }
+                    let toss: fn(&$lhs</* L */ f64>, &$rhs</* R */ f64>) -> bool = $reject;
+                    if toss(&lhs, &rhs) { return TestResult::discard() }
+                    _ = <$lhs</* L */ f64> as ops::$op<&$rhs</* R */ f64>>>::$fn(&mut lhs, &rhs);
+                    TestResult::passed()
+                }
             }
         }
     };
@@ -260,6 +281,20 @@ macro_rules! impl_mul_assign {
     ($lhs:ident, $rhs:ident $(, $($bound:ident),* $(,)?)?) => {
         impl_op_assign!(DivAssign, div_assign, $lhs, $rhs, |_, rhs| rhs.get() == 0_f64 $(, $($bound,)*)?);
         impl_op_assign!(MulAssign, mul_assign, $lhs, $rhs, |_, _| false $(, $($bound,)*)?);
+    };
+}
+
+impl<Z: CanBeInfinite + One + fmt::Debug> One for Finite<Z> {
+    const ONE: Self = Self {
+        phantom: PhantomData,
+        raw: Z::ONE,
+    };
+}
+
+impl<Z: CanBeInfinite + Zero + fmt::Debug> Zero for Finite<Z> {
+    const ZERO: Self = Self {
+        phantom: PhantomData,
+        raw: Z::ZERO,
     };
 }
 

@@ -304,7 +304,7 @@ fn i64_positive_wrap_mut(i: i64) -> TestResult {
 
 #[quickcheck]
 #[cfg(debug_assertions)]
-fn positive_also_non_negative(i: i64) -> () {
+fn positive_also_non_negative(i: i64) {
     type Positive = crate::Positive<i64>;
     type NonNegative = crate::NonNegative<i64>;
     let Some(positive) = Positive::try_new(i) else {
@@ -315,7 +315,7 @@ fn positive_also_non_negative(i: i64) -> () {
 
 #[quickcheck]
 #[cfg(debug_assertions)]
-fn positive_also_ref_non_negative(i: i64) -> () {
+fn positive_also_ref_non_negative(i: i64) {
     type Positive = crate::Positive<i64>;
     type NonNegative = crate::NonNegative<i64>;
     let Some(positive) = Positive::try_new(i) else {
@@ -462,7 +462,7 @@ fn i64_negative(i: i64) -> TestResult {
 
 #[quickcheck]
 #[cfg(debug_assertions)]
-fn negative_also_non_positive(i: i64) -> () {
+fn negative_also_non_positive(i: i64) {
     type Negative = crate::Negative<i64>;
     type NonPositive = crate::NonPositive<i64>;
     let Some(negative) = Negative::try_new(i) else {
@@ -473,7 +473,7 @@ fn negative_also_non_positive(i: i64) -> () {
 
 #[quickcheck]
 #[cfg(debug_assertions)]
-fn negative_also_ref_non_positive(i: i64) -> () {
+fn negative_also_ref_non_positive(i: i64) {
     type Negative = crate::Negative<i64>;
     type NonPositive = crate::NonPositive<i64>;
     let Some(negative) = Negative::try_new(i) else {

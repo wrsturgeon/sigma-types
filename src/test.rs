@@ -184,9 +184,9 @@ fn try_sorted_vec_strict(v: Vec<u8>) -> TestResult {
     type Sorted = crate::Sorted<Vec<u8>, false>;
     let actually_sorted = v.is_sorted_by(|a, b| matches!(a.cmp(b), Ordering::Less));
     Sorted::try_new(v).map_or_else(
-        || {
+        |e| {
             if actually_sorted {
-                TestResult::error("sorted but failed")
+                TestResult::error(format!("sorted but failed: {e:#?}"))
             } else {
                 TestResult::passed()
             }
@@ -307,7 +307,7 @@ fn i64_positive_wrap_mut(i: i64) -> TestResult {
 fn positive_also_non_negative(i: i64) {
     type Positive = crate::Positive<i64>;
     type NonNegative = crate::NonNegative<i64>;
-    let Some(positive) = Positive::try_new(i) else {
+    let Ok(positive) = Positive::try_new(i) else {
         return;
     };
     let _: NonNegative = positive.also();
@@ -318,7 +318,7 @@ fn positive_also_non_negative(i: i64) {
 fn positive_also_ref_non_negative(i: i64) {
     type Positive = crate::Positive<i64>;
     type NonNegative = crate::NonNegative<i64>;
-    let Some(positive) = Positive::try_new(i) else {
+    let Ok(positive) = Positive::try_new(i) else {
         return;
     };
     let _: &NonNegative = positive.also_ref();
@@ -329,19 +329,19 @@ fn positive_also_ref_non_negative(i: i64) {
 fn non_negative_try_also_positive(i: i64) -> TestResult {
     type NonNegative = crate::NonNegative<i64>;
     type Positive = crate::Positive<i64>;
-    let Some(non_negative) = NonNegative::try_new(i) else {
+    let Ok(non_negative) = NonNegative::try_new(i) else {
         return TestResult::discard();
     };
-    let maybe_also: Option<Positive> = non_negative.try_also();
+    let maybe_also: Result<Positive, _> = non_negative.try_also();
     match maybe_also {
-        Some(..) => {
+        Ok(..) => {
             if i == 0 {
                 TestResult::error("Zero but passed")
             } else {
                 TestResult::passed()
             }
         }
-        None => {
+        Err(..) => {
             if i == 0 {
                 TestResult::passed()
             } else {
@@ -356,7 +356,7 @@ fn non_negative_try_also_positive(i: i64) -> TestResult {
 fn non_negative_try_also_ref_positive(i: i64) -> TestResult {
     type NonNegative = crate::NonNegative<i64>;
     type Positive = crate::Positive<i64>;
-    let Some(non_negative) = NonNegative::try_new(i) else {
+    let Ok(non_negative) = NonNegative::try_new(i) else {
         return TestResult::discard();
     };
     let maybe_also: Result<&Positive, _> = non_negative.try_also_ref();
@@ -465,7 +465,7 @@ fn i64_negative(i: i64) -> TestResult {
 fn negative_also_non_positive(i: i64) {
     type Negative = crate::Negative<i64>;
     type NonPositive = crate::NonPositive<i64>;
-    let Some(negative) = Negative::try_new(i) else {
+    let Ok(negative) = Negative::try_new(i) else {
         return;
     };
     let _: NonPositive = negative.also();
@@ -476,7 +476,7 @@ fn negative_also_non_positive(i: i64) {
 fn negative_also_ref_non_positive(i: i64) {
     type Negative = crate::Negative<i64>;
     type NonPositive = crate::NonPositive<i64>;
-    let Some(negative) = Negative::try_new(i) else {
+    let Ok(negative) = Negative::try_new(i) else {
         return;
     };
     let _: &NonPositive = negative.also_ref();
@@ -487,19 +487,19 @@ fn negative_also_ref_non_positive(i: i64) {
 fn non_positive_try_also_negative(i: i64) -> TestResult {
     type NonPositive = crate::NonPositive<i64>;
     type Negative = crate::Negative<i64>;
-    let Some(non_positive) = NonPositive::try_new(i) else {
+    let Ok(non_positive) = NonPositive::try_new(i) else {
         return TestResult::discard();
     };
-    let maybe_also: Option<Negative> = non_positive.try_also();
+    let maybe_also: Result<Negative, _> = non_positive.try_also();
     match maybe_also {
-        Some(..) => {
+        Ok(..) => {
             if i == 0 {
                 TestResult::error("Zero but passed")
             } else {
                 TestResult::passed()
             }
         }
-        None => {
+        Err(..) => {
             if i == 0 {
                 TestResult::passed()
             } else {
@@ -514,7 +514,7 @@ fn non_positive_try_also_negative(i: i64) -> TestResult {
 fn non_positive_try_also_ref_negative(i: i64) -> TestResult {
     type NonPositive = crate::NonPositive<i64>;
     type Negative = crate::Negative<i64>;
-    let Some(non_positive) = NonPositive::try_new(i) else {
+    let Ok(non_positive) = NonPositive::try_new(i) else {
         return TestResult::discard();
     };
     let maybe_also: Result<&Negative, _> = non_positive.try_also_ref();

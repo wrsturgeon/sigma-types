@@ -1,6 +1,6 @@
 [package]
 name = "sigma-types"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
 publish = true
 authors = [ "Will Sturgeon" ]
@@ -22,7 +22,7 @@ serde = { version = "1.0.217", default-features = false, features = [  ], option
 paste = { version = "1.0.15", default-features = false, features = [  ] }
 quickcheck = { version = "1.0.3", default-features = false, features = [  ] }
 quickcheck_macros = { version = "1.0.0", default-features = false, features = [  ] }
-serde_json = { version = "1.0.135", default-features = false, features = [ "std" ] }
+serde_json = { version = "1.0.137", default-features = false, features = [ "std" ] }
 
 [features]
 malachite = [ "dep:malachite-base" ]
@@ -244,6 +244,7 @@ unused-unsafe = "deny"
 unused-variables = "deny"
 useless-deprecated = "deny"
 useless-ptr-null-checks = "deny"
+uses-power-alignment = "deny"
 variant-size-differences = "deny"
 warnings = "warn"
 wasm-c-abi = "deny"

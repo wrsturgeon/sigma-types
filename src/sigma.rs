@@ -607,8 +607,11 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     #[inline]
     pub fn try_also<OtherInvariant: crate::Test<Raw, 1>>(
         self,
-    ) -> Option<Sigma<Raw, OtherInvariant>> {
-        Sigma::try_new(self.get())
+    ) -> Result<Sigma<Raw, OtherInvariant>, Self> {
+        Sigma::try_new(self.get()).map_err(|raw| Self {
+            phantom: PhantomData,
+            raw,
+        })
     }
 
     /// Without changing its internal value,
@@ -640,14 +643,19 @@ impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> Sigma<Raw, Invariant> {
     /// Create a new sigma type instance by checking an invariant.
     /// # Errors
     /// If the invariant does not hold.
+    /// In this case, return the original input unchanged.
     #[inline]
-    pub fn try_new(raw: Raw) -> Option<Self> {
+    pub fn try_new(raw: Raw) -> Result<Self, Raw> {
         let provisional = Self {
             phantom: PhantomData,
             raw,
         };
-        provisional.try_check().ok()?;
-        Some(provisional)
+
+        if provisional.try_check().is_ok() {
+            Ok(provisional)
+        } else {
+            Err(provisional.raw)
+        }
     }
 
     /// Wrap a reference through pointer reinterpretation magic.
@@ -695,7 +703,7 @@ impl<Raw: Arbitrary + fmt::Debug, Invariant: 'static + crate::Test<Raw, 1>> Arbi
     fn arbitrary(g: &mut Gen) -> Self {
         loop {
             let raw: Raw = Arbitrary::arbitrary(g);
-            if let Some(sigma) = Self::try_new(raw) {
+            if let Ok(sigma) = Self::try_new(raw) {
                 return sigma;
             }
         }
@@ -707,7 +715,7 @@ impl<Raw: Arbitrary + fmt::Debug, Invariant: 'static + crate::Test<Raw, 1>> Arbi
             phantom: PhantomData,
             ref raw,
         } = *self;
-        Box::new(raw.shrink().filter_map(Self::try_new))
+        Box::new(raw.shrink().filter_map(|shrunk| Self::try_new(shrunk).ok()))
     }
 }
 

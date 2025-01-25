@@ -40,22 +40,6 @@ impl fmt::Display for OutOfOrder {
 pub type Sorted<Input, const ALLOW_DUPLICATES: bool> =
     crate::Sigma<Input, SortedInvariant<Input, ALLOW_DUPLICATES>>;
 
-impl<Input: IntoIterator + fmt::Debug, const ALLOW_DUPLICATES: bool> IntoIterator
-    for Sorted<Input, ALLOW_DUPLICATES>
-where
-    Input::Item: PartialOrd + fmt::Debug,
-    for<'i> &'i Input: IntoIterator<Item = &'i Input::Item>,
-{
-    type IntoIter = <Input as IntoIterator>::IntoIter;
-    type Item = <Input as IntoIterator>::Item;
-
-    #[inline(always)]
-    fn into_iter(self) -> Self::IntoIter {
-        let iter: Input = self.get();
-        <Input as IntoIterator>::into_iter(iter)
-    }
-}
-
 /// Iterable data structure guaranteed to be sorted (optionally with or without duplicates).
 pub type SortedInvariant<Input, const ALLOW_DUPLICATES: bool> =
     AllPairs<SortedPair<ALLOW_DUPLICATES>, Input>;

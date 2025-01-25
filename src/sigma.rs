@@ -771,6 +771,15 @@ impl<Raw: Eq + fmt::Debug, Invariant: crate::Test<Raw, 1>> Eq for Sigma<Raw, Inv
     }
 }
 
+impl<I, Raw: FromIterator<I> + fmt::Debug, Invariant: crate::Test<Raw, 1>> FromIterator<I>
+    for Sigma<Raw, Invariant>
+{
+    #[inline]
+    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
+        Self::new(Raw::from_iter(iter))
+    }
+}
+
 impl<Raw: Hash + fmt::Debug, Invariant: crate::Test<Raw, 1>> Hash for Sigma<Raw, Invariant> {
     #[inline(always)]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -788,6 +797,25 @@ impl<Raw: Hash + fmt::Debug, Invariant: crate::Test<Raw, 1>> Hash for Sigma<Raw,
         Raw::hash_slice(reinterpreted, state);
     }
 }
+
+impl<Raw: IntoIterator + fmt::Debug, Invariant: crate::Test<Raw, 1>> IntoIterator
+    for Sigma<Raw, Invariant>
+{
+    type IntoIter = <Raw as IntoIterator>::IntoIter;
+    type Item = <Raw as IntoIterator>::Item;
+
+    #[inline(always)]
+    fn into_iter(self) -> Self::IntoIter {
+        Raw::into_iter(self.get())
+    }
+}
+
+/*
+impl<Raw: Iterator + fmt::Debug, Invariant: crate::Test<Raw, 1>> Iterator
+    for Sigma<Raw, Invariant>
+{
+}
+*/
 
 impl<Raw: Ord + fmt::Debug, Invariant: crate::Test<Raw, 1>> Ord for Sigma<Raw, Invariant> {
     #[inline(always)]

@@ -75,9 +75,9 @@ checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
 name = "malachite-base"
-version = "0.4.16"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46059721011b0458b7bd6d9179be5d0b60294281c23320c207adceaecc54d13b"
+checksum = "06f6d078bb4dad5b76f6a85737e6c9113667d199612a73eef375c56e75d5d4d5"
 dependencies = [
  "hashbrown",
  "itertools",
@@ -199,7 +199,7 @@ dependencies = [
 
 [[package]]
 name = "sigma-types"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "malachite-base",
  "paste",

@@ -31,7 +31,7 @@
       system:
       let
         pname = "sigma-types";
-        version = "0.3.6";
+        version = "0.3.7";
         synopsis = "Types checked for an invariant.";
         description = synopsis;
         src = nix-filter {
@@ -267,7 +267,7 @@
         apps =
           builtins.mapAttrs
             (name: script: {
-              meta = { };
+              meta.description = name;
               type = "app";
               program =
                 let

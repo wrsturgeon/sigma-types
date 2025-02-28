@@ -392,6 +392,13 @@ impl<T: One + PartialOrd + Zero + fmt::Debug> One for Positive<T> {
     };
 }
 
+impl<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> From<Raw> for Sigma<Raw, Invariant> {
+    #[inline(always)]
+    fn from(value: Raw) -> Self {
+        Self::new(value)
+    }
+}
+
 /// Type that maintains a given invariant.
 #[repr(transparent)]
 pub struct Sigma<Raw: fmt::Debug, Invariant: crate::Test<Raw, 1>> {
